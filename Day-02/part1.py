@@ -22,6 +22,3 @@ for step in data:
         position.depth += distance
 
 print(position.horizontal * position.depth)
-
-# One-liner:
-print((lambda d: sum(map(int, [step.split(" ")[1] for step in d if step.startswith("f")])) * (sum(map(int, [step.split(" ")[1] for step in d if step.startswith("d")])) - sum(map(int, [step.split(" ")[1] for step in d if step.startswith("u")]))))(open("input.txt", "r").readlines()))

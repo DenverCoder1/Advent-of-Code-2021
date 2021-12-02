@@ -1,8 +1,6 @@
-# Advent of Code 2021 - Python
+# Advent of Code 2021 Solutions in Python
 
-[adventofcode.com](https://adventofcode.com/2021)
-
-Advent of Code 2021 Solutions in Python
+This repo contains both readable and one-liner solutions for the [Advent of Code 2021](https://adventofcode.com/2021) challenges in Python.
 
 ## About me
 

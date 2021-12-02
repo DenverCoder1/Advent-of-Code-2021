@@ -23,3 +23,6 @@ for step in data:
         position.aim += distance
 
 print(position.horizontal * position.depth)
+
+# One-liner:
+print((lambda d:sum((p[1]for p in d if p[0].startswith('f')))*sum((p[1]*sum((-dst if dir.startswith('u')else dst if dir.startswith('d')else 0 for(dir,dst)in d[:i]))for(i,p)in enumerate(d)if p[0].startswith('f'))))(tuple(map(lambda l:tuple(map(lambda s:int(s)if s.isnumeric()else s,l.split())),open('input.txt','r').readlines()))))

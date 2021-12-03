@@ -1,0 +1,2 @@
+# 3.1
+print((lambda d:(lambda f:int(''.join([max(f[i],key=f[i].get)for i in range(len(f))]),2)*int(''.join([min(f[i],key=f[i].get)for i in range(len(f))]),2))([{'0':len([num for num in d if num[i]=='0']),'1':len([num for num in d if num[i]=='1'])}for i in range(len(d[0]))]))(open('input.txt').read().splitlines()))

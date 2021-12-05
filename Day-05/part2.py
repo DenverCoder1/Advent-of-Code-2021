@@ -30,14 +30,14 @@ from typing import Optional
 
 class Point:
     """
-    Point class
+    Point class for representing an x,y coordinate in a grid
     """
 
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
 
-    def __eq__(self, other):
+    def __eq__(self, other: "Point"):
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
@@ -49,15 +49,15 @@ class Point:
 
 class Line:
     """
-    Line class
+    Line class for representing a pair of points in a grid
     """
 
     def __init__(self, start: Point, end: Point):
         self.start = start
         self.end = end
 
-    def __eq__(self, other):
-        return self.start == other.p1 and self.end == other.p2
+    def __eq__(self, other: "Line"):
+        return self.start == other.start and self.end == other.end
 
     def __hash__(self):
         return hash((self.start, self.end))
@@ -81,7 +81,7 @@ class Line:
 
 class Grid:
     """
-    Grid class
+    Grid class for representing a grid of points stored as a dictionary for counting overlaps
     """
 
     def __init__(self, points: Optional[defaultdict[Point, int]] = None):
@@ -130,7 +130,7 @@ class Grid:
         Returns:
             int: Number of overlapping points
         """
-        return sum(1 for _, count in self.points.items() if count >= 2)
+        return sum(count >= 2 for count in self.points.values())
 
     def __repr__(self):
         return f"Grid({self.points})"

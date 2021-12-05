@@ -140,7 +140,7 @@ class Grid:
         Returns:
             int: Number of overlapping points
         """
-        return sum(1 for _, count in self.points.items() if count >= 2)
+        return sum(count >= 2 for count in self.points.values())
 
     def __repr__(self):
         return f"Grid({self.points})"

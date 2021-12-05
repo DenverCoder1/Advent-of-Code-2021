@@ -139,14 +139,14 @@ class Grid:
 def main():
     # Read input
     with open("input.txt", "r") as f:
-        lines = f.read().splitlines()
+        lines = [Line.from_string(line) for line in f.readlines()]
 
     # Create grid
     grid = Grid()
 
     # Add lines
     for line in lines:
-        grid.add_line(Line.from_string(line))
+        grid.add_line(line)
 
     # Count overlapping points
     print(grid.count_overlapping_points())

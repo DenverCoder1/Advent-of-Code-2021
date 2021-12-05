@@ -149,7 +149,7 @@ class Grid:
 def main():
     # Read input
     with open("input.txt", "r") as f:
-        lines = f.read().splitlines()
+        lines = [Line.from_string(line) for line in f.readlines()]
 
     # Create grid
     grid = Grid()
@@ -157,7 +157,7 @@ def main():
     # Add lines
     for line in lines:
         try:
-            grid.add_line(Line.from_string(line))
+            grid.add_line(line)
         except ValueError:
             # Ignore lines that are not horizontal or vertical
             pass

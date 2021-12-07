@@ -26,7 +26,10 @@ import os
 
 def calculate_fuel(position1: int, position2: int) -> int:
     """
-    Calculate fuel usage between two positions (the distance between them)
+    Calculate fuel usage between two positions.
+
+    Each change of 1 step in horizontal position costs 1 more unit of fuel than the last:
+    the first step costs 1, the second step costs 2, the third step costs 3, and so on.
 
     Args:
         position1 (int): The starting position

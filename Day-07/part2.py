@@ -22,9 +22,10 @@ Determine the horizontal position that the crabs can align to using the least fu
 """
 
 import os
+from statistics import mean
 
 
-def calculate_fuel(position1: int, position2: int) -> int:
+def calculate_fuel(target: int, position: int) -> int:
     """
     Calculate fuel usage between two positions.
 
@@ -38,7 +39,7 @@ def calculate_fuel(position1: int, position2: int) -> int:
     Returns:
         int: The fuel usage between the two positions
     """
-    return abs(position1 - position2) * (abs(position1 - position2) + 1) // 2
+    return abs(target - position) * (abs(target - position) + 1) // 2
 
 
 def find_min_fuel(positions: list[int]) -> int:
@@ -51,10 +52,8 @@ def find_min_fuel(positions: list[int]) -> int:
     Returns:
         int: The minimum fuel required to align the positions
     """
-    return min(
-        sum(calculate_fuel(target, position) for position in positions)
-        for target in range(max(positions))
-    )
+    target = int(mean(positions))
+    return sum(calculate_fuel(target, position) for position in positions)
 
 
 def main():

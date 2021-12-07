@@ -33,6 +33,7 @@ Determine the horizontal position that the crabs can align to using the least fu
 """
 
 import os
+from statistics import median
 
 
 def calculate_fuel(position1: int, position2: int) -> int:
@@ -59,10 +60,8 @@ def find_min_fuel(positions: list[int]) -> int:
     Returns:
         int: The minimum fuel required to align the positions
     """
-    return min(
-        sum(calculate_fuel(target, position) for position in positions)
-        for target in range(max(positions))
-    )
+    target = int(median(positions))
+    return sum(calculate_fuel(target, position) for position in positions)
 
 
 def main():

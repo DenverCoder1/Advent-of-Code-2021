@@ -49,32 +49,28 @@ def calculate_fuel(position1: int, position2: int) -> int:
     return abs(position1 - position2)
 
 
-def find_min_fuel(positions: list[int]) -> tuple[int, int]:
+def find_min_fuel(positions: list[int]) -> int:
     """
-    Find the number to which the sum of fuel usage from all other positions is minimized
+    Find the minimum amount of fuel required to align the positions
 
     Args:
         positions (list[int]): The list of positions
 
     Returns:
-        int: The position to which the sum of fuel usage from all other positions is minimized
         int: The minimum fuel required to align the positions
     """
-    min_fuel_position = min_fuel = float("inf")
-    for target in range(len(positions)):
-        fuel = sum(calculate_fuel(target, position) for position in positions)
-        if fuel < min_fuel:
-            min_fuel_position, min_fuel = target, fuel
-    return min_fuel_position, min_fuel
+    return min(
+        sum(calculate_fuel(target, position) for position in positions)
+        for target in range(len(positions))
+    )
 
 
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
         data = [int(x) for x in f.read().split(",")]
 
-    min_fuel_position, min_fuel = find_min_fuel(data)
+    min_fuel = find_min_fuel(data)
 
-    print(f"The position to which the minimum fuel is required is {min_fuel_position}.")
     print(f"The minimum fuel required to align the positions is {min_fuel}.")
 
 

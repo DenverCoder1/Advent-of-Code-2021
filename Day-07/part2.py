@@ -49,11 +49,11 @@ def find_min_fuel(positions: list[int]) -> tuple[int, int]:
         int: The position to which the sum of fuel usage from all other positions is minimized
         int: The minimum fuel required to align the positions
     """
-    min_fuel = min_fuel_position = float("inf")
+    min_fuel_position = min_fuel = float("inf")
     for target in range(len(positions)):
         fuel = sum(calculate_fuel(target, position) for position in positions)
         if fuel < min_fuel:
-            min_fuel, min_fuel_position = fuel, target
+            min_fuel_position, min_fuel = target, fuel
     return min_fuel_position, min_fuel
 
 

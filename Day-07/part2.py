@@ -53,7 +53,7 @@ def find_min_fuel(positions: list[int]) -> int:
     """
     return min(
         sum(calculate_fuel(target, position) for position in positions)
-        for target in range(len(positions))
+        for target in range(max(positions))
     )
 
 

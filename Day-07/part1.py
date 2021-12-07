@@ -36,18 +36,18 @@ import os
 from statistics import median
 
 
-def calculate_fuel(position1: int, position2: int) -> int:
+def calculate_fuel(target: int, position: int) -> int:
     """
     Calculate fuel usage between two positions (the distance between them)
 
     Args:
-        position1 (int): The starting position
-        position2 (int): The position to which the distance is calculated
+        target (int): The position to which the distance is calculated
+        position (int): The starting position
 
     Returns:
         int: The fuel usage between the two positions
     """
-    return abs(position1 - position2)
+    return abs(target - position)
 
 
 def find_min_fuel(positions: list[int]) -> int:

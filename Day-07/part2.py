@@ -33,8 +33,8 @@ def calculate_fuel(target: int, position: int) -> int:
     the first step costs 1, the second step costs 2, the third step costs 3, and so on.
 
     Args:
-        position1 (int): The starting position
-        position2 (int): The position to which the distance is calculated
+        target (int): The position to which the distance is calculated
+        position (int): The starting position
 
     Returns:
         int: The fuel usage between the two positions

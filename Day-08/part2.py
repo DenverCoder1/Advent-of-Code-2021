@@ -53,28 +53,6 @@ import os
 import itertools
 
 
-def check_mapping(mapping: dict[str, str], wire_map: dict[str, str]) -> bool:
-    """
-    Check if mapping contradicts wire_map.
-
-    Args:
-        mapping (dict[str, str]): mapping that is being attempted
-        wire_map (dict[str, str]): mapping that must not be contradicted
-
-    Returns:
-        True if mapping does not contradict wire_map
-    """
-    # Check that all wires in mapping don't map to something else in wire_map
-    for unknown, match in mapping.items():
-        if unknown in wire_map.keys() and wire_map[unknown] != match:
-            return False
-    # Check that all wires mapped to in mapping aren't mapped to by something else in wire_map
-    for unknown, match in wire_map.items():
-        if match in mapping.values() and mapping.get(unknown, "") != match:
-            return False
-    return True
-
-
 def substitute(pattern: str, mapping: dict[str, str]) -> str:
     """
     Substitute each character in pattern with the corresponding value in mapping and sort alphabetically
@@ -125,9 +103,6 @@ def identify_digits(
                     **dict(zip(unknown_wires, perm)),
                     **dict(zip(perm, unknown_in_pattern)),
                 }
-                # check if permutation is valid
-                if not check_mapping(mapping, wire_map):
-                    continue
                 # check if mapping contradicts wire_map
                 if substitute(unknown_pattern, {**wire_map, **mapping}) != pattern:
                     continue

@@ -77,15 +77,11 @@ class FishCalendar:
         """
         return self.__day_counts[day]
 
-    def set_count_at_day(self, day: int, count: int):
+    def shift_day_counts(self):
         """
-        Set the number of fish with the given number of days remaining.
-
-        Args:
-            day (int) : The number of days remaining.
-            count (int) : The number of fish with the given number of days remaining.
+        Shift all of the day counts to the left by one day.
         """
-        self.__day_counts[day] = count
+        self.__day_counts = self.__day_counts[1:] + [0]
 
     def add_fish(self, day: int, amount: int = 1):
         """
@@ -104,10 +100,8 @@ class FishCalendar:
         """
         num_fish_on_day_zero = self.get_count_at_day(0)
 
-        # Move all fish counts down by one day
-        for i in range(len(self.day_counts) - 1):
-            self.set_count_at_day(i, self.get_count_at_day(i + 1))
-        self.set_count_at_day(len(self.day_counts) - 1, 0)
+        # Move all fish counts to the left by one day
+        self.shift_day_counts()
 
         # Reset fish that have reached the end of their cycle
         self.add_fish(self.cycle_length - 1, amount=num_fish_on_day_zero)

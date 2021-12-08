@@ -105,25 +105,23 @@ class Grid:
         Args:
             line (Line): Line to add
         """
-        # Horizontal line
-        if line.start.y == line.end.y:
-            left, right = min(line.start.x, line.end.x), max(line.start.x, line.end.x)
-            for x in range(left, right + 1):
-                self.add_point(Point(x, line.start.y))
-        # Vertical line
-        elif line.start.x == line.end.x:
-            top, bottom = min(line.start.y, line.end.y), max(line.start.y, line.end.y)
-            for y in range(top, bottom + 1):
-                self.add_point(Point(line.start.x, y))
-        # Diagonal line (assume slope of 1 or -1)
-        else:
-            x_dir = 1 if line.start.x < line.end.x else -1
-            y_dir = 1 if line.start.y < line.end.y else -1
-            x, y = line.start.x, line.start.y
-            while x != line.end.x and y != line.end.y:
-                self.add_point(Point(x, y))
-                x, y = x + x_dir, y + y_dir
+
+        def compare(num1: int, num2: int) -> int:
+            """Returns 0 if equal, -1 if num1 < num2, 1 if num1 > num2"""
+            if num1 == num2:
+                return 0
+            return -1 if num1 < num2 else 1
+
+        # determine how much x and y are changing for each step
+        x_dir = compare(line.end.x, line.start.x)
+        y_dir = compare(line.end.y, line.start.y)
+
+        # add the points in the line
+        x, y = line.start.x, line.start.y
+        while not (x, y) == (line.end.x, line.end.y):
             self.add_point(Point(x, y))
+            x, y = x + x_dir, y + y_dir
+        self.add_point(Point(x, y))
 
     def count_overlapping_points(self) -> int:
         """

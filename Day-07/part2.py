@@ -46,14 +46,20 @@ def find_min_fuel(positions: list[int]) -> int:
     """
     Find the minimum amount of fuel required to align the positions
 
+    Note: the target must lie within 0.5 of the mean of the positions (see https://redd.it/rawxad)
+
     Args:
         positions (list[int]): The list of positions
 
     Returns:
         int: The minimum fuel required to align the positions
     """
-    target = int(mean(positions))
-    return sum(calculate_fuel(target, position) for position in positions)
+    mean_position = mean(positions)
+    potential_targets = (int(mean_position - 0.5), int(mean_position + 0.5))
+    return min(
+        sum(calculate_fuel(target, position) for position in positions)
+        for target in potential_targets
+    )
 
 
 def main():

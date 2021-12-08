@@ -53,18 +53,97 @@ import os
 import itertools
 
 
+def check_mapping(mapping: dict[str, str], wire_map: dict[str, str]) -> bool:
+    """
+    Check if mapping contradicts wire_map.
+
+    Args:
+        mapping (dict[str, str]): mapping that is being attempted
+        wire_map (dict[str, str]): mapping that must not be contradicted
+
+    Returns:
+        True if mapping does not contradict wire_map
+    """
+    # Check that all wires in mapping don't map to something else in wire_map
+    for unknown, match in mapping.items():
+        if unknown in wire_map.keys() and wire_map[unknown] != match:
+            return False
+    # Check that all wires mapped to in mapping aren't mapped to by something else in wire_map
+    for unknown, match in wire_map.items():
+        if match in mapping.values() and mapping.get(unknown, "") != match:
+            return False
+    return True
+
+
 def substitute(pattern: str, mapping: dict[str, str]) -> str:
     """
     Substitute each character in pattern with the corresponding value in mapping and sort alphabetically
 
     Args:
-        pattern: The pattern to substitute.
-        mapping: The mapping to use.
+        pattern (str): pattern to be substituted
+        mapping (dict[str, str]): mapping of letters to letters in standard configuration
 
     Returns:
         The substituted pattern.
     """
     return "".join(sorted(mapping[char] for char in pattern))
+
+
+def identify_digits(
+    patterns: dict[int, str],
+    unknown_patterns: list[str],
+    wire_map: dict[str, str],
+    identified: list[int],
+) -> list[str]:
+    """
+    Given a list of patterns, recursively identify which digits correspond to which patterns with backtracking.
+
+    Args:
+        patterns (dict[int, str]): mapping of digit to pattern in standard configuration
+        unknown_patterns (list[str]): list of patterns that have not yet been identified
+        wire_map (dict[str, str]): mapping of letters to letters in standard configuration
+        identified (list[int]): list of digits that have already been identified
+
+    Returns:
+        list of digits that correspond to the unknown patterns
+    """
+    if not unknown_patterns:
+        return identified
+
+    unidentifed_patterns = {
+        num: pattern for num, pattern in patterns.items() if num not in identified
+    }
+
+    unknown_pattern = unknown_patterns[0]
+
+    for num, pattern in unidentifed_patterns.items():
+        if len(pattern) == len(unknown_pattern):
+            unknown_wires = [w for w in unknown_pattern if w not in wire_map.keys()]
+            unknown_in_pattern = [w for w in pattern if w not in wire_map.values()]
+            for perm in itertools.permutations(unknown_wires):
+                mapping = {
+                    **dict(zip(unknown_wires, perm)),
+                    **dict(zip(perm, unknown_in_pattern)),
+                }
+                # check if permutation is valid
+                if not check_mapping(mapping, wire_map):
+                    continue
+                # check if mapping contradicts wire_map
+                if substitute(unknown_pattern, {**wire_map, **mapping}) != pattern:
+                    continue
+                identified_copy = identified.copy()
+                # recursively identify digits
+                identified = identify_digits(
+                    patterns,
+                    unknown_patterns[1:],
+                    {**wire_map, **mapping},
+                    identified + [num],
+                )
+                if identified:
+                    return identified
+                identified = identified_copy
+
+    return []
 
 
 def main():
@@ -83,39 +162,33 @@ def main():
      gggg 
     """
     patterns = {
-        "abcefg": "0",
-        "cf": "1",
-        "acdeg": "2",
-        "acdfg": "3",
-        "bcdf": "4",
-        "abdfg": "5",
-        "abdefg": "6",
-        "acf": "7",
-        "abcdefg": "8",
-        "abcdfg": "9",
+        0: "abcefg",
+        1: "cf",
+        2: "acdeg",
+        3: "acdfg",
+        4: "bcdf",
+        5: "abdfg",
+        6: "abdefg",
+        7: "acf",
+        8: "abcdefg",
+        9: "abcdfg",
     }
 
     total = 0
 
     for line in data:
-        ten_patterns, four_digits = line.split(" | ")
-        ten_patterns = ten_patterns.split(" ")
-        four_digits = four_digits.split(" ")
-        # find which of the patterns each corresponds to
-        perms = itertools.permutations("abcdefg")
-        for perm in perms:
-            mapping = dict(zip(perm, "abcdefg"))
-            reverse_mapping = {v: k for k, v in mapping.items()}
-            # substitute each pattern with the corresponding value
-            decoded_set = set(
-                substitute(pattern, mapping) for pattern in patterns.keys()
-            )
-            ten_pattern_set = set("".join(sorted(pattern)) for pattern in ten_patterns)
-
-            if decoded_set == ten_pattern_set:
-                # determine which digits each pattern corresponds to
-                output = "".join(patterns[substitute(digit, reverse_mapping)] for digit in four_digits)
-                total += int(output)
+        before, after = line.split(" | ")
+        before = before.split()
+        after = after.split()
+        # sort each pattern alphabetically
+        before = sorted(["".join(sorted(p)) for p in before], key=len)
+        identified = identify_digits(patterns, before, {}, [])
+        code = dict(zip(before, identified))
+        output = ""
+        for pattern in after:
+            pattern = "".join(sorted(pattern))
+            output += str(code[pattern])
+        total += int(output)
 
     print(total)
 

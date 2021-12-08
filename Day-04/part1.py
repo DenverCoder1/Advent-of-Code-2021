@@ -100,8 +100,8 @@ class Board:
             all(self.marked[row][col] for col in range(self.cols))
             for row in range(self.rows)
         ) or any(
-            all(self.marked[col][row] for col in range(self.cols))
-            for row in range(self.rows)
+            all(self.marked[row][col] for row in range(self.rows))
+            for col in range(self.cols)
         )
 
     def sum_unmarked(self) -> int:

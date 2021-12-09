@@ -86,7 +86,7 @@ class Heightmap:
     """
 
     def __init__(self, data: list[list[int]]):
-        self.points: list[Point] = [
+        self.points = [
             [Point(row, col, height) for col, height in enumerate(data[row])]
             for row in range(len(data))
         ]

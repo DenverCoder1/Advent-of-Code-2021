@@ -40,91 +40,172 @@ What do you get if you multiply together the sizes of the three largest basins?
 """
 
 import os
+from dataclasses import dataclass
+from functools import reduce
 
 
-def is_low_point(grid, row, col):
+@dataclass
+class Point:
     """
-    Return whether all adjacent cells (up, down, left, right) are more than the current row, col
+    Class to represent a point in the Heightmap
     """
-    above = grid[row - 1][col] if row > 0 else float("inf")
-    below = grid[row + 1][col] if row < len(grid) - 1 else float("inf")
-    left = grid[row][col - 1] if col > 0 else float("inf")
-    right = grid[row][col + 1] if col < len(grid[row]) - 1 else float("inf")
-    return grid[row][col] < min(above, below, left, right)
+
+    row: int
+    col: int
+    height: int
+
+    @property
+    def risk_level(self):
+        return 1 + self.height
+
+    def __int__(self):
+        return self.height
+
+    def __lt__(self, other):
+        if isinstance(other, Point):
+            return self.height < other.height
+        return self.height < other
+
+    def __gt__(self, other):
+        if isinstance(other, Point):
+            return self.height > other.height
+        return self.height > other
+
+    def __eq__(self, other):
+        if isinstance(other, Point):
+            return self.height == other.height
+        return self.height == other
+
+    def __hash__(self):
+        return hash((self.row, self.col, self.height))
 
 
-def find_low_points(heightmap):
-    low_points = []
-    for row in range(len(heightmap)):
-        for col in range(len(heightmap[row])):
-            if is_low_point(heightmap, row, col):
-                low_points.append((row, col, heightmap[row][col]))
-    return low_points
+class Heightmap:
+    """
+    Class to represent a heightmap containing a grid of Points.
+    """
+
+    def __init__(self, data: list[list[int]]):
+        self.points = [
+            [Point(row, col, height) for col, height in enumerate(data[row])]
+            for row in range(len(data))
+        ]
+
+    def __getitem__(self, key):
+        return self.points[key]
+
+    def __len__(self):
+        return len(self.points)
+
+    def __iter__(self):
+        for row in self.points:
+            yield row
+
+    def __repr__(self):
+        return "".join(
+            "".join(f"{point.height}" for point in row) + "\n" for row in self.points
+        )
 
 
-def find_basin_region(grid, low_point, basin_region: set, from_direction: int = None):
+def is_low_point(heightmap: Heightmap, point: Point) -> bool:
+    """
+    Return whether all adjacent cells (up, down, left, right) are higher than the current row, col
+
+    Args:
+        heightmap (Heightmap): The heightmap containing the grid of all points
+        point (Point): The point to check
+
+    Returns:
+        bool: Whether the point is a low point or not
+    """
+    row, col = point.row, point.col
+    above = heightmap[row - 1][col] if row > 0 else float("inf")
+    below = heightmap[row + 1][col] if row < len(heightmap) - 1 else float("inf")
+    left = heightmap[row][col - 1] if col > 0 else float("inf")
+    right = heightmap[row][col + 1] if col < len(heightmap[row]) - 1 else float("inf")
+    return heightmap[row][col] < min(above, below, left, right)
+
+
+def find_low_points(heightmap: Heightmap) -> list[Point]:
+    """
+    Return a list of all low points in the heightmap
+
+    Args:
+        heightmap (Heightmap): The heightmap containing the grid of all points
+
+    Returns:
+        list[Point]: A list of all low points in the heightmap
+    """
+    return [
+        point for row in heightmap for point in row if is_low_point(heightmap, point)
+    ]
+
+
+def find_basin_region(
+    heightmap: Heightmap, point: Point, basin: set[Point]
+) -> set[Point]:
     """
     Recursively expand region until walls are reached and return the list of points in the region
 
-    Walls are denoted by 9's
+    Args:
+        heightmap (Heightmap): The heightmap containing the grid of all points
+        point (Point): The point currently being expanded
+        basin (set[Point]): The current basin region
+
+    Returns:
+        set[Point]: The basin region
     """
-    row, col, height = low_point
-    if (
-        height == 9
-        or row < 0
-        or row >= len(grid)
-        or col < 0
-        or col >= len(grid[0])
-        or low_point in basin_region
-    ):
-        return []
-    basin_region.add(low_point)
-    if row > 0 and grid[row - 1][col] != 9:
-        left_region = find_basin_region(grid, (row - 1, col, height), basin_region, -1)
-        for point in left_region:
-            basin_region.add(point)
-    if row < len(grid) - 1 and grid[row + 1][col] != 9:
-        right_region = find_basin_region(grid, (row + 1, col, height), basin_region, 1)
-        for point in right_region:
-            basin_region.add(point)
-    if col > 0 and grid[row][col - 1] != 9:
-        up_region = find_basin_region(grid, (row, col - 1, height), basin_region, 2)
-        for point in up_region:
-            basin_region.add(point)
-    if col < len(grid[row]) - 1 and grid[row][col + 1] != 9:
-        down_region = find_basin_region(grid, (row, col + 1, height), basin_region, -2)
-        for point in down_region:
-            basin_region.add(point)
-    return basin_region
+    row, col = point.row, point.col
+    # don't expand if we've already seen this point
+    if point in basin:
+        return set()
+    # add the current point to the basin
+    basin.add(point)
+    # expand region upward
+    if row > 0 and heightmap[row - 1][col] != 9:
+        basin.update(find_basin_region(heightmap, heightmap[row - 1][col], basin))
+    # expand region downward
+    if row < len(heightmap) - 1 and heightmap[row + 1][col] != 9:
+        basin.update(find_basin_region(heightmap, heightmap[row + 1][col], basin))
+    # expand region to the left
+    if col > 0 and heightmap[row][col - 1] != 9:
+        basin.update(find_basin_region(heightmap, heightmap[row][col - 1], basin))
+    # expand region to the right
+    if col < len(heightmap[row]) - 1 and heightmap[row][col + 1] != 9:
+        basin.update(find_basin_region(heightmap, heightmap[row][col + 1], basin))
+    # return the basin region
+    return basin
 
 
-def find_basins(grid):
-    """basins are sets of points separated by a wall of 9's"""
-    low_points = find_low_points(grid)
-    basins = []
-    for low_point in low_points:
-        basins.append(find_basin_region(grid, low_point, set()))
-    return basins
+def find_basins(heightmap: Heightmap) -> list[set[Point]]:
+    """
+    Locate all basins in the heightmap.
+
+    Note: basins are sets of points bounded by a wall of 9's
+
+    Args:
+        heightmap (Heightmap): The heightmap containing the grid of all points
+
+    Returns:
+        list[set[Point]]: A list of all basins in the heightmap
+    """
+    low_points = find_low_points(heightmap)
+    return [find_basin_region(heightmap, low_point, set()) for low_point in low_points]
 
 
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
-        data = f.read()
+        data = [list(map(int, row)) for row in f.read().splitlines()]
 
-    grid = data.split("\n")
-    grid = [list(map(int, row)) for row in grid]
+    heightmap = Heightmap(data)
 
-    basins = find_basins(grid)
+    basins = find_basins(heightmap)
 
     # extract the three largest basins
-    basins.sort(key=lambda basin: len(basin), reverse=True)
-    largest_basins = basins[:3]
+    largest_basins = sorted(basins, key=lambda basin: len(basin), reverse=True)[:3]
 
     # multiply the sizes of the three largest basins
-    product = 1
-    for basin in largest_basins:
-        product *= len(basin)
-    print(product)
+    print(reduce(lambda x, y: x * y, [len(basin) for basin in largest_basins]))
 
 
 if __name__ == "__main__":

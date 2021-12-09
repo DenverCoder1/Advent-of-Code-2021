@@ -26,38 +26,115 @@ Find all of the low points on your heightmap. What is the sum of the risk levels
 """
 
 import os
+from dataclasses import dataclass
 
 
-def is_low_point(grid, row, col):
+@dataclass
+class Point:
     """
-    Return whether all adjacent cells (up, down, left, right) are more than the current row, col
+    Class to represent a point in the Heightmap
     """
-    above = grid[row - 1][col] if row > 0 else float("inf")
-    below = grid[row + 1][col] if row < len(grid) - 1 else float("inf")
-    left = grid[row][col - 1] if col > 0 else float("inf")
-    right = grid[row][col + 1] if col < len(grid[row]) - 1 else float("inf")
-    return grid[row][col] < min(above, below, left, right)
+
+    row: int
+    col: int
+    height: int
+
+    @property
+    def risk_level(self):
+        return 1 + self.height
+
+    def __int__(self):
+        return self.height
+
+    def __lt__(self, other):
+        if isinstance(other, Point):
+            return self.height < other.height
+        return self.height < other
+
+    def __gt__(self, other):
+        if isinstance(other, Point):
+            return self.height > other.height
+        return self.height > other
+
+    def __eq__(self, other):
+        if isinstance(other, Point):
+            return self.height == other.height
+        return self.height == other
+
+    def __hash__(self):
+        return hash((self.row, self.col, self.height))
 
 
-def find_low_points(heightmap):
-    low_points = []
-    for row in range(len(heightmap)):
-        for col in range(len(heightmap[row])):
-            if is_low_point(heightmap, row, col):
-                low_points.append((row, col, heightmap[row][col]))
-    return low_points
+class Heightmap:
+    """
+    Class to represent a heightmap containing a grid of Points.
+    """
+
+    def __init__(self, data: list[list[int]]):
+        self.points: list[Point] = [
+            [Point(row, col, height) for col, height in enumerate(data[row])]
+            for row in range(len(data))
+        ]
+
+    def __getitem__(self, key):
+        return self.points[key]
+
+    def __len__(self):
+        return len(self.points)
+
+    def __iter__(self):
+        for row in self.points:
+            yield row
+
+    def __repr__(self):
+        return "".join(
+            "".join(f"{point.height}" for point in row) + "\n" for row in self.points
+        )
+
+
+def is_low_point(heightmap: Heightmap, point: Point) -> bool:
+    """
+    Return whether all adjacent cells (up, down, left, right) are higher than the current row, col
+
+    Args:
+        heightmap (Heightmap): The heightmap containing the grid of all points
+        point (Point): The point to check
+
+    Returns:
+        bool: Whether the point is a low point or not
+    """
+    row, col = point.row, point.col
+    above = heightmap[row - 1][col] if row > 0 else float("inf")
+    below = heightmap[row + 1][col] if row < len(heightmap) - 1 else float("inf")
+    left = heightmap[row][col - 1] if col > 0 else float("inf")
+    right = heightmap[row][col + 1] if col < len(heightmap[row]) - 1 else float("inf")
+    return heightmap[row][col] < min(above, below, left, right)
+
+
+def find_low_points(heightmap: Heightmap) -> list[Point]:
+    """
+    Return a list of all low points in the heightmap
+
+    Args:
+        heightmap (Heightmap): The heightmap containing the grid of all points
+
+    Returns:
+        list[Point]: A list of all low points in the heightmap
+    """
+    return [
+        point for row in heightmap for point in row if is_low_point(heightmap, point)
+    ]
 
 
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
-        data = f.read()
+        data = [list(map(int, row)) for row in f.read().splitlines()]
 
-    grid = data.split("\n")
-    grid = [list(map(int, row)) for row in grid]
+    heightmap = Heightmap(data)
 
-    low_points = find_low_points(grid)
+    low_points = find_low_points(heightmap)
 
-    print(f"Sum of risk levels: {sum([point[2] + 1 for point in low_points])}")
+    print(f"Sum of risk levels: {sum([point.risk_level for point in low_points])}")
 
 
 if __name__ == "__main__":

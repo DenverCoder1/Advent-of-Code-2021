@@ -76,6 +76,36 @@ class Heightmap:
             for row in range(len(data))
         ]
 
+    def __is_low_point(self, point: Point) -> bool:
+        """
+        Return whether all adjacent cells (up, down, left, right) are higher than the current row, col
+
+        Args:
+            heightmap (Heightmap): The heightmap containing the grid of all points
+            point (Point): The point to check
+
+        Returns:
+            bool: Whether the point is a low point or not
+        """
+        row, col = point.row, point.col
+        above = self[row - 1][col] if row > 0 else float("inf")
+        below = self[row + 1][col] if row < len(self) - 1 else float("inf")
+        left = self[row][col - 1] if col > 0 else float("inf")
+        right = self[row][col + 1] if col < len(self[row]) - 1 else float("inf")
+        return self[row][col] < min(above, below, left, right)
+
+    def find_low_points(self) -> list[Point]:
+        """
+        Return a list of all low points in the heightmap
+
+        Args:
+            heightmap (Heightmap): The heightmap containing the grid of all points
+
+        Returns:
+            list[Point]: A list of all low points in the heightmap
+        """
+        return [point for row in self for point in row if self.__is_low_point(point)]
+
     def __getitem__(self, key):
         return self.points[key]
 
@@ -92,47 +122,13 @@ class Heightmap:
         )
 
 
-def is_low_point(heightmap: Heightmap, point: Point) -> bool:
-    """
-    Return whether all adjacent cells (up, down, left, right) are higher than the current row, col
-
-    Args:
-        heightmap (Heightmap): The heightmap containing the grid of all points
-        point (Point): The point to check
-
-    Returns:
-        bool: Whether the point is a low point or not
-    """
-    row, col = point.row, point.col
-    above = heightmap[row - 1][col] if row > 0 else float("inf")
-    below = heightmap[row + 1][col] if row < len(heightmap) - 1 else float("inf")
-    left = heightmap[row][col - 1] if col > 0 else float("inf")
-    right = heightmap[row][col + 1] if col < len(heightmap[row]) - 1 else float("inf")
-    return heightmap[row][col] < min(above, below, left, right)
-
-
-def find_low_points(heightmap: Heightmap) -> list[Point]:
-    """
-    Return a list of all low points in the heightmap
-
-    Args:
-        heightmap (Heightmap): The heightmap containing the grid of all points
-
-    Returns:
-        list[Point]: A list of all low points in the heightmap
-    """
-    return [
-        point for row in heightmap for point in row if is_low_point(heightmap, point)
-    ]
-
-
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
         data = [list(map(int, row)) for row in f.read().splitlines()]
 
     heightmap = Heightmap(data)
 
-    low_points = find_low_points(heightmap)
+    low_points = heightmap.find_low_points()
 
     print(f"Sum of risk levels: {sum([point.risk_level for point in low_points])}")
 

@@ -21,8 +21,6 @@ In the above example, there are four low points, all highlighted: two are in the
 The risk level of a low point is 1 plus its height. In the above example, the risk levels of the low points are 2, 1, 6, and 6. The sum of the risk levels of all low points in the heightmap is therefore 15.
 
 Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
-
-
 """
 
 import os
@@ -71,7 +69,7 @@ class Heightmap:
     """
 
     def __init__(self, data: list[list[int]]):
-        self.points: list[Point] = [
+        self.points = [
             [Point(row, col, height) for col, height in enumerate(data[row])]
             for row in range(len(data))
         ]
@@ -81,7 +79,6 @@ class Heightmap:
         Return whether all adjacent cells (up, down, left, right) are higher than the current row, col
 
         Args:
-            heightmap (Heightmap): The heightmap containing the grid of all points
             point (Point): The point to check
 
         Returns:
@@ -94,12 +91,9 @@ class Heightmap:
         right = self[row][col + 1] if col < len(self[row]) - 1 else float("inf")
         return self[row][col] < min(above, below, left, right)
 
-    def find_low_points(self) -> list[Point]:
+    def low_points(self) -> list[Point]:
         """
         Return a list of all low points in the heightmap
-
-        Args:
-            heightmap (Heightmap): The heightmap containing the grid of all points
 
         Returns:
             list[Point]: A list of all low points in the heightmap
@@ -128,9 +122,7 @@ def main():
 
     heightmap = Heightmap(data)
 
-    low_points = heightmap.find_low_points()
-
-    print(f"Sum of risk levels: {sum([point.risk_level for point in low_points])}")
+    print(sum(point.risk_level for point in heightmap.low_points()))
 
 
 if __name__ == "__main__":

@@ -121,6 +121,61 @@ class Heightmap:
         """
         return [point for row in self for point in row if self.__is_low_point(point)]
 
+    def find_basin_region(self, point: Point, basin: set[Point]) -> set[Point]:
+        """
+        Recursively expand region until walls are reached and return the list of points in the region
+
+        Args:
+            heightmap (Heightmap): The heightmap containing the grid of all points
+            point (Point): The point currently being expanded
+            basin (set[Point]): The current basin region
+
+        Returns:
+            set[Point]: The basin region
+        """
+        row, col = point.row, point.col
+
+        # don't expand if we've already seen this point
+        if point in basin:
+            return set()
+
+        # add the current point to the basin
+        basin.add(point)
+
+        # expand region upward
+        if row > 0 and self[row - 1][col] != 9:
+            basin.update(self.find_basin_region(self[row - 1][col], basin))
+
+        # expand region downward
+        if row < len(self) - 1 and self[row + 1][col] != 9:
+            basin.update(self.find_basin_region(self[row + 1][col], basin))
+
+        # expand region to the left
+        if col > 0 and self[row][col - 1] != 9:
+            basin.update(self.find_basin_region(self[row][col - 1], basin))
+
+        # expand region to the right
+        if col < len(self[row]) - 1 and self[row][col + 1] != 9:
+            basin.update(self.find_basin_region(self[row][col + 1], basin))
+
+        # return the basin region
+        return basin
+
+    def find_basins(self) -> list[set[Point]]:
+        """
+        Locate all basins in the heightmap.
+
+        Note: basins are sets of points bounded by a wall of 9's
+
+        Args:
+            heightmap (Heightmap): The heightmap containing the grid of all points
+
+        Returns:
+            list[set[Point]]: A list of all basins in the heightmap
+        """
+        low_points = self.find_low_points()
+        return [self.find_basin_region(low_point, set()) for low_point in low_points]
+
     def __getitem__(self, key):
         return self.points[key]
 
@@ -137,65 +192,13 @@ class Heightmap:
         )
 
 
-def find_basin_region(
-    heightmap: Heightmap, point: Point, basin: set[Point]
-) -> set[Point]:
-    """
-    Recursively expand region until walls are reached and return the list of points in the region
-
-    Args:
-        heightmap (Heightmap): The heightmap containing the grid of all points
-        point (Point): The point currently being expanded
-        basin (set[Point]): The current basin region
-
-    Returns:
-        set[Point]: The basin region
-    """
-    row, col = point.row, point.col
-    # don't expand if we've already seen this point
-    if point in basin:
-        return set()
-    # add the current point to the basin
-    basin.add(point)
-    # expand region upward
-    if row > 0 and heightmap[row - 1][col] != 9:
-        basin.update(find_basin_region(heightmap, heightmap[row - 1][col], basin))
-    # expand region downward
-    if row < len(heightmap) - 1 and heightmap[row + 1][col] != 9:
-        basin.update(find_basin_region(heightmap, heightmap[row + 1][col], basin))
-    # expand region to the left
-    if col > 0 and heightmap[row][col - 1] != 9:
-        basin.update(find_basin_region(heightmap, heightmap[row][col - 1], basin))
-    # expand region to the right
-    if col < len(heightmap[row]) - 1 and heightmap[row][col + 1] != 9:
-        basin.update(find_basin_region(heightmap, heightmap[row][col + 1], basin))
-    # return the basin region
-    return basin
-
-
-def find_basins(heightmap: Heightmap) -> list[set[Point]]:
-    """
-    Locate all basins in the heightmap.
-
-    Note: basins are sets of points bounded by a wall of 9's
-
-    Args:
-        heightmap (Heightmap): The heightmap containing the grid of all points
-
-    Returns:
-        list[set[Point]]: A list of all basins in the heightmap
-    """
-    low_points = heightmap.find_low_points()
-    return [find_basin_region(heightmap, low_point, set()) for low_point in low_points]
-
-
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
         data = [list(map(int, row)) for row in f.read().splitlines()]
 
     heightmap = Heightmap(data)
 
-    basins = find_basins(heightmap)
+    basins = heightmap.find_basins()
 
     # extract the three largest basins
     largest_basins = sorted(basins, key=lambda basin: len(basin), reverse=True)[:3]

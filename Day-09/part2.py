@@ -42,6 +42,7 @@ What do you get if you multiply together the sizes of the three largest basins?
 import os
 from dataclasses import dataclass
 from functools import reduce
+from typing import Generator, Optional
 
 
 @dataclass
@@ -96,7 +97,6 @@ class Heightmap:
         Return whether all adjacent cells (up, down, left, right) are higher than the current row, col
 
         Args:
-            heightmap (Heightmap): The heightmap containing the grid of all points
             point (Point): The point to check
 
         Returns:
@@ -109,30 +109,27 @@ class Heightmap:
         right = self[row][col + 1] if col < len(self[row]) - 1 else float("inf")
         return self[row][col] < min(above, below, left, right)
 
-    def find_low_points(self) -> list[Point]:
+    def low_points(self) -> list[Point]:
         """
         Return a list of all low points in the heightmap
-
-        Args:
-            heightmap (Heightmap): The heightmap containing the grid of all points
 
         Returns:
             list[Point]: A list of all low points in the heightmap
         """
         return [point for row in self for point in row if self.__is_low_point(point)]
 
-    def find_basin_region(self, point: Point, basin: set[Point]) -> set[Point]:
+    def __basin(self, point: Point, basin: Optional[set[Point]] = None) -> set[Point]:
         """
-        Recursively expand region until walls are reached and return the list of points in the region
+        Recursively expand region until walls are reached and return the points in the region
 
         Args:
-            heightmap (Heightmap): The heightmap containing the grid of all points
             point (Point): The point currently being expanded
             basin (set[Point]): The current basin region
 
         Returns:
             set[Point]: The basin region
         """
+        basin = basin or set()
         row, col = point.row, point.col
 
         # don't expand if we've already seen this point
@@ -144,37 +141,47 @@ class Heightmap:
 
         # expand region upward
         if row > 0 and self[row - 1][col] != 9:
-            basin.update(self.find_basin_region(self[row - 1][col], basin))
+            basin.update(self.__basin(self[row - 1][col], basin))
 
         # expand region downward
         if row < len(self) - 1 and self[row + 1][col] != 9:
-            basin.update(self.find_basin_region(self[row + 1][col], basin))
+            basin.update(self.__basin(self[row + 1][col], basin))
 
         # expand region to the left
         if col > 0 and self[row][col - 1] != 9:
-            basin.update(self.find_basin_region(self[row][col - 1], basin))
+            basin.update(self.__basin(self[row][col - 1], basin))
 
         # expand region to the right
         if col < len(self[row]) - 1 and self[row][col + 1] != 9:
-            basin.update(self.find_basin_region(self[row][col + 1], basin))
+            basin.update(self.__basin(self[row][col + 1], basin))
 
         # return the basin region
         return basin
 
-    def find_basins(self) -> list[set[Point]]:
+    def basins(self) -> Generator[set[Point], None, None]:
         """
-        Locate all basins in the heightmap.
+        Locate and return all basins in the heightmap
 
         Note: basins are sets of points bounded by a wall of 9's
 
+        Returns:
+            Generator[set[Point], None, None]: A generator of all basins in the heightmap
+        """
+        low_points = self.low_points()
+        for point in low_points:
+            yield self.__basin(point)
+
+    def largest_basins(self, count: int = 3) -> Generator[set[Point], None, None]:
+        """
+        Return the largest basins in the heightmap, sorted by length
+
         Args:
-            heightmap (Heightmap): The heightmap containing the grid of all points
+            count (int): The number of largest basins to return
 
         Returns:
-            list[set[Point]]: A list of all basins in the heightmap
+            Generator[set[Point], None, None]: A generator of the largest basins in the heightmap
         """
-        low_points = self.find_low_points()
-        return [self.find_basin_region(low_point, set()) for low_point in low_points]
+        return (basin for basin in sorted(self.basins(), key=len, reverse=True)[:count])
 
     def __getitem__(self, key):
         return self.points[key]
@@ -198,13 +205,11 @@ def main():
 
     heightmap = Heightmap(data)
 
-    basins = heightmap.find_basins()
-
-    # extract the three largest basins
-    largest_basins = sorted(basins, key=lambda basin: len(basin), reverse=True)[:3]
+    # get the sizes of the three largest basins
+    largest_basins = map(len, heightmap.largest_basins(3))
 
     # multiply the sizes of the three largest basins
-    print(reduce(lambda x, y: x * y, [len(basin) for basin in largest_basins]))
+    print(reduce(lambda x, y: x * y, largest_basins))
 
 
 if __name__ == "__main__":

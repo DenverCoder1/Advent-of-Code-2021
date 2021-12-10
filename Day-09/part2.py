@@ -167,9 +167,7 @@ class Heightmap:
         Returns:
             Generator[set[Point], None, None]: A generator of all basins in the heightmap
         """
-        low_points = self.low_points()
-        for point in low_points:
-            yield self.__basin(point)
+        return (self.__basin(point) for point in self.low_points())
 
     def largest_basins(self, count: int = 3) -> Generator[set[Point], None, None]:
         """

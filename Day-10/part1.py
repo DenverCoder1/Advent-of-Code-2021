@@ -56,46 +56,60 @@ Find the first illegal character in each corrupted line of the navigation subsys
 import os
 
 
+class Stack:
+    def __init__(self):
+        self._items = []
+
+    def push(self, item):
+        self._items.append(item)
+
+    def pop(self):
+        return self._items.pop()
+
+    def peek(self):
+        return self._items[-1]
+
+    def is_empty(self):
+        return len(self._items) == 0
+
+
+class SyntaxAnalyzer:
+    def __init__(self):
+        self._stack = Stack()
+        self.matching_pairs = {")": "(", "]": "[", "}": "{", ">": "<"}
+        self.points_map = {")": 3, "]": 57, "}": 1197, ">": 25137}
+
+    def analyze(self, line: str) -> int:
+        """
+        Analyze a line for syntax errors and return the score.
+
+        Args:
+            line (str): The line to analyze.
+
+        Returns:
+            int: The score for the line.
+        """
+        for char in line:
+            if char in ("(", "[", "{", "<"):
+                self._stack.push(char)
+            elif char in (")", "]", "}", ">"):
+                # score points for the syntax error if the top of
+                # the stack is not the matching character
+                if self._stack.pop() != self.matching_pairs[char]:
+                    return self.points_map[char]
+            else:
+                raise ValueError(f"Invalid character {char}")
+        return 0
+
+
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
         data = f.read().splitlines()
 
-    total_points = 0
+    analyzer = SyntaxAnalyzer()
 
-    for line in data:
-        stack = []
-        for char in line:
-            if char in ["(", "[", "{", "<"]:
-                stack.append(char)
-            elif char in [")", "]", "}", ">"]:
-                if len(stack) == 0:
-                    break
-                if char == ")" and stack[-1] == "(":
-                    stack.pop()
-                elif char == "]" and stack[-1] == "[":
-                    stack.pop()
-                elif char == "}" and stack[-1] == "{":
-                    stack.pop()
-                elif char == ">" and stack[-1] == "<":
-                    stack.pop()
-                else:
-                    # get points for this error
-                    if char == ")":
-                        print("Found ) - 3 points")
-                        points = 3
-                    elif char == "]":
-                        print("Found ] - 57 points")
-                        points = 57
-                    elif char == "}":
-                        print("Found } - 1197 points")
-                        points = 1197
-                    elif char == ">":
-                        print("Found > - 25137 points")
-                        points = 25137
-                    total_points += points
-                    break
+    print(sum(analyzer.analyze(line) for line in data))
 
-    print(total_points)
 
 if __name__ == "__main__":
     main()

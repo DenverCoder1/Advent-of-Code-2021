@@ -1,55 +1,4 @@
 """
---- Day 10: Syntax Scoring ---
-You ask the submarine to determine the best route out of the deep-sea cave, but it only replies:
-
-Syntax error in navigation subsystem on line: all of them
-All of them?! The damage is worse than you thought. You bring up a copy of the navigation subsystem (your puzzle input).
-
-The navigation subsystem syntax is made of several lines containing chunks. There are one or more chunks on each line, and chunks contain zero or more other chunks. Adjacent chunks are not separated by any delimiter; if one chunk stops, the next chunk (if any) can immediately start. Every chunk must open and close with one of four legal pairs of matching characters:
-
-If a chunk opens with (, it must close with ).
-If a chunk opens with [, it must close with ].
-If a chunk opens with {, it must close with }.
-If a chunk opens with <, it must close with >.
-So, () is a legal chunk that contains no other chunks, as is []. More complex but valid chunks include ([]), {()()()}, <([{}])>, [<>({}){}[([])<>]], and even (((((((((()))))))))).
-
-Some lines are incomplete, but others are corrupted. Find and discard the corrupted lines first.
-
-A corrupted line is one where a chunk closes with the wrong character - that is, where the characters it opens and closes with do not form one of the four legal pairs listed above.
-
-Examples of corrupted chunks include (], {()()()>, (((()))}, and <([]){()}[{}]). Such a chunk can appear anywhere within a line, and its presence causes the whole line to be considered corrupted.
-
-For example, consider the following navigation subsystem:
-
-[({(<(())[]>[[{[]{<()<>>
-[(()[<>])]({[<{<<[]>>(
-{([(<{}[<>[]}>{[]{[(<()>
-(((({<>}<{<{<>}{[]{[]{}
-[[<[([]))<([[{}[[()]]]
-[{[{({}]{}}([{[{{{}}([]
-{<[[]]>}<{[{[{[]{()[[[]
-[<(<(<(<{}))><([]([]()
-<{([([[(<>()){}]>(<<{{
-<{([{{}}[<[[[<>{}]]]>[]]
-Some of the lines aren't corrupted, just incomplete; you can ignore these lines for now. The remaining five lines are corrupted:
-
-{([(<{}[<>[]}>{[]{[(<()> - Expected ], but found } instead.
-[[<[([]))<([[{}[[()]]] - Expected ], but found ) instead.
-[{[{({}]{}}([{[{{{}}([] - Expected ), but found ] instead.
-[<(<(<(<{}))><([]([]() - Expected >, but found ) instead.
-<{([([[(<>()){}]>(<<{{ - Expected ], but found > instead.
-Stop at the first incorrect closing character on each corrupted line.
-
-Did you know that syntax checkers actually have contests to see who can get the high score for syntax errors in a file? It's true! To calculate the syntax error score for a line, take the first illegal character on the line and look it up in the following table:
-
-): 3 points.
-]: 57 points.
-}: 1197 points.
->: 25137 points.
-In the above example, an illegal ) was found twice (2*3 = 6 points), an illegal ] was found once (57 points), an illegal } was found once (1197 points), and an illegal > was found once (25137 points). So, the total syntax error score for this file is 6+57+1197+25137 = 26397 points!
-
-Find the first illegal character in each corrupted line of the navigation subsystem. What is the total syntax error score for those errors?
-
 -- Part Two ---
 Now, discard the corrupted lines. The remaining lines are incomplete.
 
@@ -87,73 +36,84 @@ The five lines' completion strings have total scores as follows:
 Autocomplete tools are an odd bunch: the winner is found by sorting all of the scores and then taking the middle score. (There will always be an odd number of scores to consider.) In this example, the middle score is 288957 because there are the same number of scores smaller and larger than it.
 
 Find the completion string for each incomplete line, score the completion strings, and sort the scores. What is the middle score?
-
-
 """
 
 import os
+
+
+class Stack:
+    def __init__(self):
+        self._items = []
+
+    def push(self, item):
+        self._items.append(item)
+
+    def pop(self):
+        return self._items.pop()
+
+    def peek(self):
+        return self._items[-1]
+
+    def is_empty(self):
+        return len(self._items) == 0
+
+
+class AutocompleteTool:
+    def __init__(self):
+        self.matching_pairs = {")": "(", "]": "[", "}": "{", ">": "<"}
+        self.points_map = {"(": 1, "[": 2, "{": 3, "<": 4}
+
+    def autocomplete(self, line: str) -> int:
+        """
+        Find the characters that need to be added to the line to make it valid and return the score.
+
+        Args:
+            line (str): The line to autocomplete.
+
+        Returns:
+            int: The score of the line.
+        """
+        stack = Stack()
+        for char in line:
+            if char in self.matching_pairs.values():
+                stack.push(char)
+            elif char in self.matching_pairs.keys():
+                if stack.peek() == self.matching_pairs[char]:
+                    stack.pop()
+                else:
+                    # Skip line since it is invalid
+                    return 0
+        # Add the missing closing characters
+        score = 0
+        while not stack.is_empty():
+            score *= 5
+            score += self.points_map[stack.pop()]
+        return score
+
+    def winning_line_score(self, lines: list) -> int:
+        """
+        Score the lines and return the middle score
+
+        Args:
+            lines (list): The lines to score.
+
+        Returns:
+            int: The middle score.
+        """
+        scores = []
+        for line in lines:
+            if score := self.autocomplete(line):
+                scores.append(score)
+        return sorted(scores)[len(scores) // 2]
 
 
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
         data = f.read().splitlines()
 
-    total_points = 0
+    autocomplete_tool = AutocompleteTool()
 
-    incomplete_line_scores = []
-
-    for line in data:
-        failed = False
-        stack = []
-        incomplete_line_points = 0
-        for char in line:
-            if char in ["(", "[", "{", "<"]:
-                stack.append(char)
-            elif char in [")", "]", "}", ">"]:
-                if len(stack) == 0:
-                    break
-                if char == ")" and stack[-1] == "(":
-                    stack.pop()
-                elif char == "]" and stack[-1] == "[":
-                    stack.pop()
-                elif char == "}" and stack[-1] == "{":
-                    stack.pop()
-                elif char == ">" and stack[-1] == "<":
-                    stack.pop()
-                else:
-                    # get points for this error
-                    if char == ")":
-                        points = 3
-                    elif char == "]":
-                        points = 57
-                    elif char == "}":
-                        points = 1197
-                    elif char == ">":
-                        points = 25137
-                    total_points += points
-                    failed = True
-                    break
-        if failed or len(stack) == 0:
-            continue
-        # find the closing characters for all remaining open brackets
-        for char in reversed(stack):
-            incomplete_line_points *= 5
-            if char == "(":
-                incomplete_line_points += 1
-            elif char == "[":
-                incomplete_line_points += 2
-            elif char == "{":
-                incomplete_line_points += 3
-            elif char == "<":
-                incomplete_line_points += 4
-        incomplete_line_scores.append(incomplete_line_points)
-
-    # Part 1
-    print(total_points)
-
-    # Part 2
-    incomplete_line_scores.sort()
-    print(incomplete_line_scores[len(incomplete_line_scores) // 2])
+    print(autocomplete_tool.winning_line_score(data))
 
 
 if __name__ == "__main__":

@@ -66,12 +66,6 @@ class Stack:
     def pop(self):
         return self._items.pop()
 
-    def peek(self):
-        return self._items[-1]
-
-    def is_empty(self):
-        return len(self._items) == 0
-
 
 class SyntaxAnalyzer:
     def __init__(self):
@@ -90,9 +84,9 @@ class SyntaxAnalyzer:
             int: The score for the line.
         """
         for char in line:
-            if char in ("(", "[", "{", "<"):
+            if char in self.matching_pairs.values():
                 self._stack.push(char)
-            elif char in (")", "]", "}", ">"):
+            elif char in self.matching_pairs.keys():
                 # score points for the syntax error if the top of
                 # the stack is not the matching character
                 if self._stack.pop() != self.matching_pairs[char]:

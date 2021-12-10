@@ -39,6 +39,7 @@ Find the completion string for each incomplete line, score the completion string
 """
 
 import os
+from typing import Generator
 
 
 class Stack:
@@ -65,24 +66,26 @@ class AutocompleteTool:
 
     def autocomplete(self, line: str) -> int:
         """
-        Find the characters that need to be added to the line to make it valid and return the score.
+        Find the characters that need to be added to the line to make it valid and return the score
 
         Args:
-            line (str): The line to autocomplete.
+            line (str): The line to autocomplete
 
         Returns:
-            int: The score of the line.
+            int: The score of the line
         """
         stack = Stack()
         for char in line:
+            # push if the character is an opening bracket
             if char in self.matching_pairs.values():
                 stack.push(char)
+            # if the character is a closing bracket
             elif char in self.matching_pairs.keys():
-                if stack.peek() == self.matching_pairs[char]:
-                    stack.pop()
-                else:
-                    # Skip line since it is invalid
-                    return 0
+                # if it doesn't match the last opening bracket, line is invalid
+                if stack.peek() != self.matching_pairs[char]:
+                    raise ValueError(f"Invalid line: {line}")
+                # otherwise, pop the last bracket
+                stack.pop()
         # Add the missing closing characters
         score = 0
         while not stack.is_empty():
@@ -90,21 +93,35 @@ class AutocompleteTool:
             score += self.points_map[stack.pop()]
         return score
 
+    def score_lines(self, lines: list[str]) -> Generator[int, None, None]:
+        """
+        Score the lines and return the scores as a generator
+
+        Args:
+            lines (list[str]): The lines to score
+
+        Returns:
+            Generator[int, None, None]: The score for each line
+        """
+        for line in lines:
+            try:
+                yield self.autocomplete(line)
+            except ValueError:
+                # If the line is invalid, ignore it
+                continue
+
     def winning_line_score(self, lines: list) -> int:
         """
         Score the lines and return the middle score
 
         Args:
-            lines (list): The lines to score.
+            lines (list): The lines to score
 
         Returns:
-            int: The middle score.
+            int: The middle score
         """
-        scores = []
-        for line in lines:
-            if score := self.autocomplete(line):
-                scores.append(score)
-        return sorted(scores)[len(scores) // 2]
+        scores = sorted(self.score_lines(lines))
+        return scores[len(scores) // 2]
 
 
 def main():

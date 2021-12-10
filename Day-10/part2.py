@@ -133,10 +133,8 @@ def main():
                     total_points += points
                     failed = True
                     break
-        if failed:
+        if failed or len(stack) == 0:
             continue
-        if len(stack) == 0:
-            break
         # find the closing characters for all remaining open brackets
         for char in reversed(stack):
             incomplete_line_points *= 5
@@ -153,7 +151,7 @@ def main():
     # Part 1
     print(total_points)
 
-    # fPart 2
+    # Part 2
     incomplete_line_scores.sort()
     print(incomplete_line_scores[len(incomplete_line_scores) // 2])
 

@@ -162,14 +162,7 @@ class Graph:
         """Check if a node is a small cave (i.e. it contains only lowercase letters)"""
         return node.islower()
 
-    def __dfs_count(
-        self,
-        current: str,
-        start: str,
-        end: str,
-        visited: set,
-        paths: int = 0,
-    ) -> int:
+    def __dfs_count(self, current: str, start: str, end: str, visited: set) -> int:
         """
         Using DFS, recursively find all paths from start to end that visit small caves at most once.
         Large caves can be visited any number of times.
@@ -179,20 +172,22 @@ class Graph:
             start (str): The starting node
             end (str): The ending node
             visited (set): The set of visited nodes
-            paths (int): The number of paths
 
         Returns:
             int: The number of paths
         """
+        # path found
         if current == end:
             return 1
 
-        for neighbor in self.get_neighbors(current):
-            # visit if node is a large cave or a small cave that has not been visited before
-            if not self.is_small_cave(neighbor) or neighbor not in visited:
-                paths += self.__dfs_count(neighbor, start, end, visited | {neighbor})
-
-        return paths
+        # return total of paths found from each neighbor
+        # a neighbor can be visited if it is a large cave
+        # or if it is a small cave and it has not been visited
+        return sum(
+            self.__dfs_count(neighbor, start, end, visited | {neighbor})
+            for neighbor in self.get_neighbors(current)
+            if not self.is_small_cave(neighbor) or neighbor not in visited
+        )
 
     def find_path_count(self, start: str, end: str) -> int:
         """

@@ -73,7 +73,6 @@ class Graph:
         end: str,
         visited: set,
         can_visit_twice: bool = True,
-        paths: int = 0,
     ) -> int:
         """
         Using DFS, recursively find all paths from start to end that visit small caves at most once,
@@ -86,7 +85,6 @@ class Graph:
             end (str): The ending node
             visited (set): The set of visited nodes
             can_visit_twice (bool): Whether or not it is permitted to add a visited small cave a second time
-            paths (int): The number of paths
 
         Returns:
             int: The number of paths
@@ -94,20 +92,23 @@ class Graph:
         if current == end:
             return 1
 
+        count = 0
+
+        # add up paths from visiting each neighbor
         for neighbor in self.get_neighbors(current):
             # visit if node is a large cave or a small cave that has not been visited before
             if not self.is_small_cave(neighbor) or neighbor not in visited:
-                paths += self.__dfs_count(
+                count += self.__dfs_count(
                     neighbor, start, end, visited | {neighbor}, can_visit_twice
                 )
             # if it's a small cave and we still can visit a small cave twice
             elif can_visit_twice and neighbor not in {start, end}:
                 # add the rest of the paths while not visiting the same small cave twice
-                paths += self.__dfs_count(
+                count += self.__dfs_count(
                     neighbor, start, end, visited | {neighbor}, False
                 )
 
-        return paths
+        return count
 
     def find_path_count(self, start: str, end: str) -> int:
         """

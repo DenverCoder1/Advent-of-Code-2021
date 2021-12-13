@@ -143,21 +143,20 @@ Given these new rules, how many paths through this cave system are there?
 
 import os
 from collections import defaultdict
-from typing import Generator
 
 
 class Graph:
     def __init__(self):
-        self.nodes: defaultdict[str, list] = defaultdict(list)
+        self._nodes: defaultdict[str, list] = defaultdict(list)
 
     def add_edge(self, node: str, neighbor: str):
         """Add an edge to the graph going in both directions"""
-        self.nodes[node].append(neighbor)
-        self.nodes[neighbor].append(node)
+        self._nodes[node].append(neighbor)
+        self._nodes[neighbor].append(node)
 
     def get_neighbors(self, node: str) -> list[str]:
         """Get the neighbors of a given node"""
-        return self.nodes[node]
+        return self._nodes[node]
 
     def is_small_cave(self, node: str) -> bool:
         """Check if a node is a small cave (i.e. it contains only lowercase letters)"""
@@ -209,7 +208,7 @@ class Graph:
         return self.__dfs_count(current=start, start=start, end=end, visited={start})
 
     def __str__(self):
-        return str(self.nodes)
+        return str(self._nodes)
 
     @classmethod
     def from_file(cls, filename: str) -> "Graph":

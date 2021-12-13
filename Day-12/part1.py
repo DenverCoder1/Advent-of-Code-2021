@@ -213,16 +213,30 @@ class Graph:
     def __str__(self):
         return str(self.nodes)
 
+    @classmethod
+    def from_file(cls, filename: str) -> "Graph":
+        """
+        Create a graph from a file
+
+        Args:
+            filename (str): The filename
+
+        Returns:
+            Graph: The graph
+        """
+        graph = cls()
+        with open(filename) as f:
+            data = f.read().splitlines()
+        for line in data:
+            node, neighbor = line.split("-")
+            graph.add_edge(node, neighbor)
+        return graph
+
 
 def main():
-    with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
-        data = f.read().splitlines()
+    filename = os.path.join(os.path.dirname(__file__), "input.txt")
 
-    graph = Graph()
-
-    for line in data:
-        node, neighbor = line.split("-")
-        graph.add_edge(node, neighbor)
+    graph = Graph.from_file(filename)
 
     print(graph.find_path_count("start", "end"))
 

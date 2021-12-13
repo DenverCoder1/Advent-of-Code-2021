@@ -172,8 +172,7 @@ class Graph:
         paths: int = 0,
     ) -> int:
         """
-        Using DFS, recursively find all paths from start to end using DFS that visit small caves at most once,
-        with the exception of a single small cave that can be visited twice.
+        Using DFS, recursively find all paths from start to end that visit small caves at most once.
         Large caves can be visited any number of times.
 
         Args:
@@ -198,8 +197,7 @@ class Graph:
 
     def find_path_count(self, start: str, end: str) -> int:
         """
-        Find the number of paths from start to end by calling the
-        recursive helper function __dfs_count
+        Count paths from start to end by calling the recursive helper function __dfs_count
 
         Args:
             start (str): The starting node
@@ -208,7 +206,7 @@ class Graph:
         Returns:
             int: The number of paths
         """
-        return self.__dfs_count(start, start, end, {start})
+        return self.__dfs_count(current=start, start=start, end=end, visited={start})
 
     def __str__(self):
         return str(self.nodes)

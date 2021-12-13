@@ -47,21 +47,20 @@ Given these new rules, how many paths through this cave system are there?
 
 import os
 from collections import defaultdict
-from typing import Generator
 
 
 class Graph:
     def __init__(self):
-        self.nodes: defaultdict[str, list] = defaultdict(list)
+        self._nodes: defaultdict[str, list] = defaultdict(list)
 
     def add_edge(self, node: str, neighbor: str):
         """Add an edge to the graph going in both directions"""
-        self.nodes[node].append(neighbor)
-        self.nodes[neighbor].append(node)
+        self._nodes[node].append(neighbor)
+        self._nodes[neighbor].append(node)
 
     def get_neighbors(self, node: str) -> list[str]:
         """Get the neighbors of a given node"""
-        return self.nodes[node]
+        return self._nodes[node]
 
     def is_small_cave(self, node: str) -> bool:
         """Check if a node is a small cave (i.e. it contains only lowercase letters)"""
@@ -77,7 +76,7 @@ class Graph:
         paths: int = 0,
     ) -> int:
         """
-        Using DFS, recursively find all paths from start to end using DFS that visit small caves at most once,
+        Using DFS, recursively find all paths from start to end that visit small caves at most once,
         with the exception of a single small cave that can be visited twice.
         Large caves can be visited any number of times.
 
@@ -112,8 +111,7 @@ class Graph:
 
     def find_path_count(self, start: str, end: str) -> int:
         """
-        Find the number of paths from start to end by calling the
-        recursive helper function __dfs_count
+        Count paths from start to end by calling the recursive helper function __dfs_count
 
         Args:
             start (str): The starting node
@@ -122,21 +120,35 @@ class Graph:
         Returns:
             int: The number of paths
         """
-        return self.__dfs_count(start, start, end, {start})
+        return self.__dfs_count(current=start, start=start, end=end, visited={start})
 
     def __str__(self):
-        return str(self.nodes)
+        return str(self._nodes)
+
+    @classmethod
+    def from_file(cls, filename: str) -> "Graph":
+        """
+        Create a graph from a file
+
+        Args:
+            filename (str): The filename
+
+        Returns:
+            Graph: The graph
+        """
+        graph = cls()
+        with open(filename) as f:
+            data = f.read().splitlines()
+        for line in data:
+            node, neighbor = line.split("-")
+            graph.add_edge(node, neighbor)
+        return graph
 
 
 def main():
-    with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
-        data = f.read().splitlines()
+    filename = os.path.join(os.path.dirname(__file__), "input.txt")
 
-    graph = Graph()
-
-    for line in data:
-        node, neighbor = line.split("-")
-        graph.add_edge(node, neighbor)
+    graph = Graph.from_file(filename)
 
     print(graph.find_path_count("start", "end"))
 

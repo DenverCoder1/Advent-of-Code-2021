@@ -22,33 +22,55 @@ class Point:
 
 
 class Paper:
-    def __init__(self, dots: list[Point]):
-        self.dots = set(dots)
-        self.width = max(d.x for d in dots) + 1
-        self.height = max(d.y for d in dots) + 1
+    def __init__(self, dots: set[Point]):
+        self.__dots = dots
 
-    def fold_x(self, value: int):
-        """fold left along an x value, mirroring the y values across the x value for each dot"""
-        self.dots = {
-            Point(2 * value - p.x, p.y) if p.x > value else p for p in self.dots
+    @property
+    def dots(self):
+        return self.__dots
+
+    def _fold_x(self, value: int):
+        """
+        Fold the paper left along the x-axis, mirroring the y values across the x value for each dot
+
+        Args:
+            value: The x value to fold along.
+        """
+        self.__dots = {
+            Point(2 * value - p.x, p.y) if p.x > value else p for p in self.__dots
         }
 
-    def fold_y(self, value: int):
-        """fold up along an y value, mirroring the x values across the y value for each dot"""
-        self.dots = {
-            Point(p.x, 2 * value - p.y) if p.y > value else p for p in self.dots
+    def _fold_y(self, value: int):
+        """
+        Fold the paper up along the y-axis, mirroring the x values across the y value for each dot
+
+        Args:
+            value: The y value to fold along.
+        """
+        self.__dots = {
+            Point(p.x, 2 * value - p.y) if p.y > value else p for p in self.__dots
         }
 
     def fold(self, axis: str, value: int):
+        """
+        Fold the paper in the given direction, mirroring across the given value
+
+        Args:
+            axis: The axis to fold along.
+            value: The value to fold along.
+
+        Raises:
+            ValueError: If the axis is not x or y.
+        """
         if axis == "x":
-            self.fold_x(value)
+            self._fold_x(value)
         elif axis == "y":
-            self.fold_y(value)
+            self._fold_y(value)
         else:
             raise ValueError(f"Invalid direction: {axis}")
 
     def __repr__(self):
-        """print a grid height x width of dots where empty is . and filled is #"""
+        """Display a grid height x width of dots where empty is . and filled is #"""
         output = ""
         min_x = min(d.x for d in self.dots)
         min_y = min(d.y for d in self.dots)

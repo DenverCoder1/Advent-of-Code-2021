@@ -28,18 +28,20 @@ class memoized_property(object):
     """
 
     def __init__(self, factory: Callable):
-        self._attr_name = factory.__name__
         self._factory = factory
         self._value = None
-        self._instance_hash = None
+        self._cached_instance_hash = None
 
     def __get__(self, instance: object, owner: type):
+        instance_hash = instance.__hash__()
+
         # Check if the instance has changed
-        if instance.__hash__() != self._instance_hash:
+        if instance_hash != self._cached_instance_hash:
             # Update the instance hash
-            self._instance_hash = instance.__hash__()
+            self._cached_instance_hash = instance_hash
             # Call the method to get the value
             self._value = self._factory(instance)
+
         return self._value
 
 

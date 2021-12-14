@@ -51,6 +51,7 @@ Apply 10 steps of pair insertion to the polymer template and find the most and l
 
 import os
 from collections import defaultdict
+from typing import Callable
 
 
 class LetterFreq:
@@ -62,10 +63,33 @@ class LetterFreq:
         return f"{self.letter}:{self.frequency}"
 
 
+class memoized_property(object):
+    """
+    Decorator to create a memoized property that will be retreived
+    from cache if the class instance has not changed
+    """
+
+    def __init__(self, factory: Callable):
+        self._attr_name = factory.__name__
+        self._factory = factory
+        self._value = None
+        self._instance_hash = None
+
+    def __get__(self, instance: object, owner: type):
+        # Check if the instance has changed
+        if instance.__hash__() != self._instance_hash:
+            # Update the instance hash
+            self._instance_hash = instance.__hash__()
+            # Call the method to get the value
+            self._value = self._factory(instance)
+        return self._value
+
+
 class Polymer:
     def __init__(self, polymer_string: str, rules: dict[str, str]):
         self.__polymer_string = polymer_string
         self.__rules = rules
+
         # initialize pair frequencies
         self.__pair_frequencies = defaultdict(int)
         for i in range(len(polymer_string) - 1):
@@ -88,6 +112,7 @@ class Polymer:
                 new_frequencies[f"{self.__rules[pair]}{pair[1]}"] += freq
             self.__pair_frequencies = new_frequencies
 
+    @memoized_property
     def letter_frequencies(self) -> dict[str, int]:
         """
         Returns the frequency of each letter in the polymer.
@@ -101,45 +126,54 @@ class Polymer:
         letter_frequencies[self.__polymer_string[-1]] += 1
         return letter_frequencies
 
-    def most_common_element(self) -> LetterFreq:
+    def most_common_letter(self) -> LetterFreq:
         """
         Returns the most common letter in the polymer.
 
         Returns:
             tuple: (element, frequency)
         """
-        letter_frequencies = self.letter_frequencies()
-        max_letter = max(letter_frequencies.items(), key=lambda x: x[1])
-        return LetterFreq(max_letter[0], max_letter[1])
+        max_letter = max(self.letter_frequencies.items(), key=lambda x: x[1])
+        return LetterFreq(letter=max_letter[0], frequency=max_letter[1])
 
-    def least_common_element(self) -> LetterFreq:
+    def least_common_letter(self) -> LetterFreq:
         """
         Returns the least common letter in the polymer.
 
         Returns:
             tuple: (element, frequency)
         """
-        letter_frequencies = self.letter_frequencies()
-        min_letter = min(letter_frequencies.items(), key=lambda x: x[1])
-        return LetterFreq(min_letter[0], min_letter[1])
+        min_letter = min(self.letter_frequencies.items(), key=lambda x: x[1])
+        return LetterFreq(letter=min_letter[0], frequency=min_letter[1])
 
     def __repr__(self):
         return self.__polymer_string
 
+    def __hash__(self):
+        return hash(tuple(self.__pair_frequencies.items()))
+
     @classmethod
-    def from_file(cls, file_path: str):
+    def from_file(cls, file_path: str) -> "Polymer":
+        """
+        Creates a polymer from a file where the first line is the polymer
+        template and the following lines (starting from line 3) are the
+        rules in the form of "XX -> Y"
+
+        Args:
+            file_path (str): Path to the file.
+        """
+
         with open(file_path) as f:
             data = f.read().splitlines()
 
         polymer_string = data[0]
-        rules = data[2:]
 
-        rule_dict = {}
-        for rule in rules:
+        rules = {}
+        for rule in data[2:]:
             before, after = rule.split(" -> ")
-            rule_dict[before] = after
+            rules[before] = after
 
-        return cls(polymer_string, rule_dict)
+        return cls(polymer_string, rules)
 
 
 def main():
@@ -149,8 +183,8 @@ def main():
 
     polymer.advance(10)
 
-    most_common = polymer.most_common_element()
-    least_common = polymer.least_common_element()
+    most_common = polymer.most_common_letter()
+    least_common = polymer.least_common_letter()
 
     print(most_common.frequency - least_common.frequency)
 

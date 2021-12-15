@@ -175,11 +175,11 @@ class RiskMap:
         """
         Expand the grid by the given number of times.
 
-        The grid is expanded by adding a new copies of the original
-        grid to the right and downward of the original grid, multiplying
-        the size of the grid in both dimensions. Each time the grid is
-        copied, the risk levels are increased by 1 from the grid above
-        or to the left of the copy. Risk levels above 9 loop back to 1.
+        The grid is expanded by adding new copies of the original grid
+        to the right and downward of the original grid, multiplying the
+        size of the grid in both dimensions. Each time the grid is copied,
+        the risk levels are increased by 1 from the grid above or to the
+        left of the copy. Risk levels above 9 loop back to 1.
 
         Args:
             times (int): The number of times to expand the grid

@@ -40,77 +40,91 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Node:
+class Tile:
+    """
+    Class to represent a tile in the risk map of the cave
+    """
+
     row: int
     col: int
     risk: int
 
 
-class Grid:
-    def __init__(self, data: list[list[Node]]):
-        self._data = data
-        self._height = len(data)
-        self._width = len(data[0])
+class RiskMap:
+    """
+    Class to represent a grid of tiles in the risk map for the cave
+    """
 
-    def __getitem__(self, pos: tuple[int, int]) -> Node:
+    def __init__(self, grid: list[list[Tile]]):
         """
-        Get the node at a position (eg. grid[1,2])
+        Construct a risk map from a matrix of tiles
 
         Args:
-            pos (tuple): The row and column of the node
+            grid (list[list[Tile]]): A 2D matrix of tiles
+        """
+        self._grid = grid
+        self._height = len(grid)
+        self._width = len(grid[0])
+
+    def __getitem__(self, pos: tuple[int, int]) -> Tile:
+        """
+        Get the tile at a position (eg. risk_map[1,2])
+
+        Args:
+            pos (tuple[int, int]): The row and column of the tile
 
         Returns:
-            Node: The node at the given position in the grid
+            Tile: The tile at the given position in the risk map
         """
         row, col = pos
-        return self._data[row][col]
+        return self._grid[row][col]
 
-    def neighbors(self, node: Node) -> list[Node]:
+    def neighbors(self, tile: Tile) -> list[Tile]:
         """
-        Get the neighbors of a position.
+        Get the neighbors of a tile
 
         Args:
-            node (Node): The node to get the neighbors of
+            tile (Tile): The tile to get the neighbors of
 
         Returns:
-            list[Node]: The neighbors of the given node
+            list[Tile]: The neighbors of the given tile
         """
         neighbors = []
-        row, col = node.row, node.col
+        row, col = tile.row, tile.col
         if row > 0:
-            neighbors.append(self._data[row - 1][col])
+            neighbors.append(self._grid[row - 1][col])
         if row < self._height - 1:
-            neighbors.append(self._data[row + 1][col])
+            neighbors.append(self._grid[row + 1][col])
         if col > 0:
-            neighbors.append(self._data[row][col - 1])
+            neighbors.append(self._grid[row][col - 1])
         if col < self._width - 1:
-            neighbors.append(self._data[row][col + 1])
+            neighbors.append(self._grid[row][col + 1])
         return neighbors
 
-    def min_cost(self, start: Node, end: Node) -> int:
+    def min_cost(self, start: Tile, end: Tile) -> int:
         """
         Find the lowest cost path from start to end using dynamic programming
 
         Args:
-            start (Node): The starting node
-            end (Node): The ending node
+            start (Tile): The starting tile
+            end (Tile): The ending tile
 
         Returns:
             int: The lowest cost path from start to end
         """
-        # matrix for storing the lowest cost to reach each node
+        # matrix for storing the lowest total risk to reach each tile
         cost = [[float("inf") for _ in range(self._width)] for _ in range(self._height)]
 
         # initialize the starting position to a cost of 0
         cost[start.row][start.col] = 0
 
-        # BFS to find the lowest cost to reach each node
+        # BFS to find the lowest cost to reach each tile
         queue = [start]
         while queue:
             current = queue.pop(0)
             for neighbor in self.neighbors(current):
                 # if the current best cost to reach the neighbor is greater than the
-                # cost to reach the current node plus the weight of the neighbor,
+                # cost to reach the current tile plus the risk of the neighbor,
                 # update the cost to reach the neighbor to the new minimum cost
                 # and add the neighbor to the queue
                 neighbor_cost = cost[neighbor.row][neighbor.col]
@@ -122,8 +136,17 @@ class Grid:
         # return the minimum cost to reach the end
         return cost[end.row][end.col]
 
+    def __repr__(self):
+        """Display a grid of numbers with no spaces"""
+        return "\n".join(
+            [
+                "".join([str(self._grid[row][col].risk) for col in range(self._width)])
+                for row in range(self._height)
+            ]
+        )
+
     @classmethod
-    def from_file(cls, filename: str) -> "Grid":
+    def from_file(cls, filename: str) -> "RiskMap":
         """
         Create a grid from a file.
 
@@ -131,21 +154,21 @@ class Grid:
             filename (str): The name of the file to read
 
         Returns:
-            Grid: The grid created from the file
+            RiskMap: The risk map created from the file
         """
         with open(filename) as f:
             data = f.read().splitlines()
         grid = [
-            [Node(row, col, int(weight)) for col, weight in enumerate(row_data)]
+            [Tile(row, col, int(risk)) for col, risk in enumerate(row_data)]
             for row, row_data in enumerate(data)
         ]
         return cls(grid)
 
 
 def main():
-    grid = Grid.from_file(os.path.join(os.path.dirname(__file__), "input.txt"))
+    risk_map = RiskMap.from_file(os.path.join(os.path.dirname(__file__), "input.txt"))
 
-    print(grid.min_cost(grid[0, 0], grid[-1, -1]))
+    print(risk_map.min_cost(risk_map[0, 0], risk_map[-1, -1]))
 
 
 if __name__ == "__main__":

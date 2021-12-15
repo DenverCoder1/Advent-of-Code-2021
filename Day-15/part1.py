@@ -43,7 +43,7 @@ from dataclasses import dataclass
 class Node:
     row: int
     col: int
-    weight: int
+    risk: int
 
 
 class Grid:
@@ -65,9 +65,15 @@ class Grid:
         row, col = pos
         return self._data[row][col]
 
-    def neighbors(self, node: Node):
+    def neighbors(self, node: Node) -> list[Node]:
         """
         Get the neighbors of a position.
+
+        Args:
+            node (Node): The node to get the neighbors of
+
+        Returns:
+            list[Node]: The neighbors of the given node
         """
         neighbors = []
         row, col = node.row, node.col
@@ -86,8 +92,8 @@ class Grid:
         Find the lowest cost path from start to end using dynamic programming
 
         Args:
-            start (tuple): The x,y coordinates of the starting position
-            end (tuple): The x,y coordinates of the ending position
+            start (Node): The starting node
+            end (Node): The ending node
 
         Returns:
             int: The lowest cost path from start to end
@@ -102,14 +108,13 @@ class Grid:
         queue = [start]
         while queue:
             current = queue.pop(0)
-            neighbors = self.neighbors(current)
-            for neighbor in neighbors:
+            for neighbor in self.neighbors(current):
                 # if the current best cost to reach the neighbor is greater than the
                 # cost to reach the current node plus the weight of the neighbor,
                 # update the cost to reach the neighbor to the new minimum cost
                 # and add the neighbor to the queue
                 neighbor_cost = cost[neighbor.row][neighbor.col]
-                cost_to_neighbor = cost[current.row][current.col] + neighbor.weight
+                cost_to_neighbor = cost[current.row][current.col] + neighbor.risk
                 if neighbor_cost > cost_to_neighbor:
                     cost[neighbor.row][neighbor.col] = cost_to_neighbor
                     queue.append(neighbor)
@@ -130,7 +135,6 @@ class Grid:
         """
         with open(filename) as f:
             data = f.read().splitlines()
-
         grid = [
             [Node(row, col, int(weight)) for col, weight in enumerate(row_data)]
             for row, row_data in enumerate(data)

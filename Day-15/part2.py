@@ -151,7 +151,7 @@ class Grid:
         Get the node at a position (eg. grid[1,2])
 
         Args:
-            pos (tuple): The row and column of the node
+            pos (tuple[int, int]): The row and column of the node
 
         Returns:
             Node: The node at the given position in the grid
@@ -190,6 +190,12 @@ class Grid:
     def neighbors(self, node: Node) -> list[Node]:
         """
         Get the neighbors of a position.
+
+        Args:
+            node (Node): The node to get the neighbors of
+
+        Returns:
+            list[Node]: The neighbors of the given node
         """
         neighbors = []
         row, col = node.row, node.col
@@ -208,8 +214,8 @@ class Grid:
         Find the lowest cost path from start to end using dynamic programming
 
         Args:
-            start (tuple): The x,y coordinates of the starting position
-            end (tuple): The x,y coordinates of the ending position
+            start (Node): The starting node
+            end (Node): The ending node
 
         Returns:
             int: The lowest cost path from start to end
@@ -224,8 +230,7 @@ class Grid:
         queue = [start]
         while queue:
             current = queue.pop(0)
-            neighbors = self.neighbors(current)
-            for neighbor in neighbors:
+            for neighbor in self.neighbors(current):
                 # if the current best cost to reach the neighbor is greater than the
                 # cost to reach the current node plus the weight (risk) of the neighbor,
                 # update the cost to reach the neighbor to the new minimum cost
@@ -261,7 +266,6 @@ class Grid:
         """
         with open(filename) as f:
             data = f.read().splitlines()
-
         grid = [
             [Node(row, col, int(risk)) for col, risk in enumerate(row_data)]
             for row, row_data in enumerate(data)

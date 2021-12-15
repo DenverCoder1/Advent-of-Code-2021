@@ -63,8 +63,14 @@ class RiskMap:
             grid (list[list[Tile]]): A 2D matrix of tiles
         """
         self._grid = grid
-        self._height = len(grid)
-        self._width = len(grid[0])
+
+    @property
+    def height(self):
+        return len(self._grid)
+
+    @property
+    def width(self):
+        return len(self._grid[0])
 
     def __getitem__(self, pos: tuple[int, int]) -> Tile:
         """
@@ -93,11 +99,11 @@ class RiskMap:
         row, col = tile.row, tile.col
         if row > 0:
             neighbors.append(self._grid[row - 1][col])
-        if row < self._height - 1:
+        if row < self.height - 1:
             neighbors.append(self._grid[row + 1][col])
         if col > 0:
             neighbors.append(self._grid[row][col - 1])
-        if col < self._width - 1:
+        if col < self.width - 1:
             neighbors.append(self._grid[row][col + 1])
         return neighbors
 
@@ -113,7 +119,7 @@ class RiskMap:
             int: The lowest cost path from start to end
         """
         # matrix for storing the lowest total risk to reach each tile
-        cost = [[float("inf") for _ in range(self._width)] for _ in range(self._height)]
+        cost = [[float("inf") for _ in range(self.width)] for _ in range(self.height)]
 
         # initialize the starting position to a cost of 0
         cost[start.row][start.col] = 0
@@ -140,8 +146,8 @@ class RiskMap:
         """Display a grid of numbers with no spaces"""
         return "\n".join(
             [
-                "".join([str(self._grid[row][col].risk) for col in range(self._width)])
-                for row in range(self._height)
+                "".join([str(self._grid[row][col].risk) for col in range(self.width)])
+                for row in range(self.height)
             ]
         )
 

@@ -27,12 +27,13 @@ What do you get if you evaluate the expression represented by your hexadecimal-e
 """
 
 import os
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import reduce
 
 
 @dataclass
-class Packet:
+class Packet(ABC):
     """
     Base class for all packets
     """
@@ -105,7 +106,7 @@ class Bits:
         """
         self.data = bit_string
 
-    def parse_packet(self) -> tuple[Packet, "Bits"]:
+    def __parse_packet_recursive(self) -> tuple[Packet, "Bits"]:
         """
         Parse the bits as a packet.
 
@@ -124,6 +125,8 @@ class Bits:
         data = self.data
         version = int(data[0:3], 2)
         packet_type = int(data[3:6], 2)
+
+        # Literal value packet
         if packet_type == 4:
             num = ""
             for i in range(6, len(data), 5):
@@ -131,7 +134,9 @@ class Bits:
                 if data[i] == "0":
                     break
             value = int(num, 2)
-            return Packet(version, packet_type, value), Bits(data[i + 5 :])
+            return LiteralValuePacket(version, packet_type, value), Bits(data[i + 5 :])
+
+        # Operator packet
         length_type = data[6]
         subpackets = []
         if length_type == "0":
@@ -139,7 +144,7 @@ class Bits:
             length = int(data[7:22], 2)
             subpacket_bits = Bits(data[22 : 22 + length])
             while subpacket_bits.data:
-                subpacket, subpacket_bits = subpacket_bits.parse_packet()
+                subpacket, subpacket_bits = subpacket_bits.__parse_packet_recursive()
                 subpackets.append(subpacket)
             data = data[22 + length :]
         else:
@@ -147,13 +152,14 @@ class Bits:
             length = int(data[7:18], 2)
             data = data[18:]
             for i in range(0, length):
-                subpacket, bits = Bits(data).parse_packet()
+                subpacket, bits = Bits(data).__parse_packet_recursive()
                 subpackets.append(subpacket)
                 data = bits.data
 
         return OperatorPacket(version, packet_type, subpackets), Bits(data)
 
-        return Packet(version, packet_type, value), Bits(data)
+    def parse_as_packet(self) -> Packet:
+        return self.__parse_packet_recursive()[0]
 
     def __repr__(self):
         return self.data

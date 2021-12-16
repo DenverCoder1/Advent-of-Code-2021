@@ -90,8 +90,8 @@ Decode the structure of your hexadecimal-encoded BITS transmission; what do you 
 
 
 import os
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 
 @dataclass
@@ -151,9 +151,9 @@ class Bits:
         """
         self.data = bit_string
 
-    def parse_packet(self) -> tuple[Packet, "Bits"]:
+    def __parse_packet_recursive(self) -> tuple[Packet, "Bits"]:
         """
-        Parse the bits as a packet.
+        Parse the bits as a packet and recursively parse the sub-packets
 
         Returns:
             A tuple containing the parsed packet and the remaining bits.
@@ -176,7 +176,7 @@ class Bits:
             length = int(data[7:22], 2)
             subpacket_bits = Bits(data[22 : 22 + length])
             while subpacket_bits.data:
-                subpacket, subpacket_bits = subpacket_bits.parse_packet()
+                subpacket, subpacket_bits = subpacket_bits.__parse_packet_recursive()
                 subpackets.append(subpacket)
             data = data[22 + length :]
         else:
@@ -184,7 +184,7 @@ class Bits:
             length = int(data[7:18], 2)
             data = data[18:]
             for i in range(0, length):
-                subpacket, bits = Bits(data).parse_packet()
+                subpacket, bits = Bits(data).__parse_packet_recursive()
                 subpackets.append(subpacket)
                 data = bits.data
 
@@ -192,6 +192,15 @@ class Bits:
             OperatorPacket(version, packet_type, length_type, length, subpackets),
             Bits(data),
         )
+
+    def parse_as_packet(self) -> Packet:
+        """
+        Parse the bits as a packet.
+
+        Returns:
+            The parsed packet.
+        """
+        return self.__parse_packet_recursive()[0]
 
     def __repr__(self):
         return self.data
@@ -213,10 +222,7 @@ def main():
 
     bits = Bits.from_hex(data)
 
-    # parse the data
-    packet, _ = bits.parse_packet()
-
-    print(packet.version_sum())
+    print(bits.parse_as_packet().version_sum())
 
 
 if __name__ == "__main__":

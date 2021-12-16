@@ -39,7 +39,56 @@ class Packet:
 
     version: int
     packet_type: int
-    value: int
+
+    @abstractmethod
+    def value(self) -> int:
+        """Return the value of the packet"""
+        pass
+
+    def __int__(self):
+        return self.value()
+
+
+@dataclass
+class LiteralValuePacket(Packet):
+    """
+    Class for literal value packets
+    """
+
+    __value: int
+
+    @property
+    def value(self) -> int:
+        """For a literal value packet, just return the value"""
+        return self.__value
+
+
+@dataclass
+class OperatorPacket(Packet):
+    """
+    Class for operator packets
+    """
+
+    subpackets: list[Packet]
+
+    @property
+    def value(self) -> int:
+        """For an operator packet, return the value of the operation"""
+        if self.packet_type == 0:
+            return sum(subpacket.value for subpacket in self.subpackets)
+        if self.packet_type == 1:
+            return reduce(lambda x, y: x * y, (p.value for p in self.subpackets))
+        if self.packet_type == 2:
+            return min(subpacket.value for subpacket in self.subpackets)
+        if self.packet_type == 3:
+            return max(subpacket.value for subpacket in self.subpackets)
+        if self.packet_type == 5:
+            return 1 if self.subpackets[0].value > self.subpackets[1].value else 0
+        if self.packet_type == 6:
+            return 1 if self.subpackets[0].value < self.subpackets[1].value else 0
+        if self.packet_type == 7:
+            return 1 if self.subpackets[0].value == self.subpackets[1].value else 0
+        raise ValueError(f"Unknown packet type: {self.packet_type}")
 
 
 class Bits:
@@ -102,25 +151,7 @@ class Bits:
                 subpackets.append(subpacket)
                 data = bits.data
 
-        # perform the operation on the sub-packets
-        if packet_type == 0:
-            value = sum(subpacket.value for subpacket in subpackets)
-        elif packet_type == 1:
-            value = reduce(
-                lambda x, y: x * y, (subpacket.value for subpacket in subpackets)
-            )
-        elif packet_type == 2:
-            value = min(subpacket.value for subpacket in subpackets)
-        elif packet_type == 3:
-            value = max(subpacket.value for subpacket in subpackets)
-        elif packet_type == 5:
-            value = 1 if subpackets[0].value > subpackets[1].value else 0
-        elif packet_type == 6:
-            value = 1 if subpackets[0].value < subpackets[1].value else 0
-        elif packet_type == 7:
-            value = 1 if subpackets[0].value == subpackets[1].value else 0
-        else:
-            raise ValueError(f"Unknown packet type: {packet_type}")
+        return OperatorPacket(version, packet_type, subpackets), Bits(data)
 
         return Packet(version, packet_type, value), Bits(data)
 
@@ -144,10 +175,7 @@ def main():
 
     bits = Bits.from_hex(data)
 
-    # parse the data
-    packet, _ = bits.parse_packet()
-
-    print(f"The value of the packet is {packet.value}")
+    print(f"The value of the packet is {bits.parse_as_packet().value}")
 
 
 if __name__ == "__main__":

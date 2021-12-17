@@ -122,57 +122,143 @@ In the above example, there are 112 different initial velocity values that meet 
 23,-5   24,-8   27,-9   30,-7   28,-5   21,-10  7,9     6,6     21,-5
 27,-10  7,2     30,-9   21,-8   22,-7   24,-9   20,-6   6,9     29,-5
 8,-2    27,-8   30,-5   24,-7
+
 How many distinct initial velocity values cause the probe to be within the target area after any step?
 """
 
 import os
 import re
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class Point:
+    """Class to represent a point in 2D space"""
+
+    x: int
+    y: int
+
+    def __add__(self, other: "Point") -> "Point":
+        return Point(self.x + other.x, self.y + other.y)
+
+
+@dataclass
+class TargetArea:
+    """Class to represent the target area rectangle"""
+
+    x_min: int
+    x_max: int
+    y_min: int
+    y_max: int
+
+    def is_within(self, point: Point) -> bool:
+        """
+        Check if the given point is within the target area
+
+        Args:
+            point (Point): The point to check
+
+        Returns:
+            bool: True if the position is within the target area, False otherwise
+        """
+        return (
+            self.x_min <= point.x <= self.x_max and self.y_min <= point.y <= self.y_max
+        )
+
+    def missed_by(self, initial_pos: Point, point: Point) -> bool:
+        """
+        Check if the given position is missed by the target area
+
+        Args:
+            initial_pos (Point): The position of the probe at the start
+            point (Point): The current position to check
+
+        Returns:
+            bool: True if the position is missed by the target area, False otherwise
+        """
+        return (
+            point.y < self.y_min
+            or (self.x_min >= initial_pos.x and point.x > self.x_max)
+            or (self.x_max <= initial_pos.x and point.x < self.x_min)
+        )
+
+
+class ProbeLauncher:
+    """Class for simulating the launching of probes toward a target area"""
+
+    def __init__(self, target_area: TargetArea):
+        self.__target_area = target_area
+
+    def __x_velocity_change(self, x_velocity: int) -> int:
+        """Return -1 if x_velocity is greater than 0, 1 if x_velocity is less than 0, 0 otherwise"""
+        dx = -1 if x_velocity > 0 else 1
+        return dx if x_velocity != 0 else 0
+
+    def __y_velocity_change(self, y_velocity: int) -> int:
+        """Return -1 due to gravity"""
+        return -1
+
+    def launch(self, initial_pos: Point, xv_i: int, yv_i: int) -> bool:
+        """
+        Launch the probe with the given initial velocity
+
+        Args:
+            initial_pos (Point): The initial position of the probe
+            xv_i (int): The initial x velocity
+            yv_i (int): The initial y velocity
+
+        Returns:
+            bool: True if the probe is within the target area, False otherwise
+        """
+        position = Point(initial_pos.x, initial_pos.y)
+        x_velocity, y_velocity = xv_i, yv_i
+        max_y = float("-inf")
+        while True:
+            position += Point(x_velocity, y_velocity)
+            max_y = max(max_y, position.y)
+            if self.__target_area.is_within(position):
+                return True
+            if self.__target_area.missed_by(initial_pos, position):
+                return False
+            x_velocity += self.__x_velocity_change(x_velocity)
+            y_velocity += self.__y_velocity_change(y_velocity)
+
+    def count_trajectories(self, initial_pos: Point = Point(0, 0)) -> int:
+        """
+        Count the number of trajectories that will hit the target area.
+
+        Args:
+            initial_pos (Point): The initial position of the probe
+
+        Returns:
+            int: The number of trajectories that will hit the target area
+        """
+        # set range for brute force based on assumptions from data
+        start_x_velocity, end_x_velocity = initial_pos.x, self.__target_area.x_max
+        start_y_velocity = -max(
+            abs(self.__target_area.y_min), abs(self.__target_area.y_max)
+        )
+        end_y_velocity = -start_y_velocity
+        # brute force finding the number of trajectories
+        return sum(
+            self.launch(initial_pos, xv_i, yv_i)
+            for xv_i in range(start_x_velocity, end_x_velocity + 1)
+            for yv_i in range(start_y_velocity, end_y_velocity + 1)
+        )
 
 
 def main():
     with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
         data = f.read()
 
-    target_x1, target_x2, target_y1, target_y2 = map(int, re.findall(r"(-?\d+)", data))
+    x_min, x_max, y_min, y_max = map(int, re.findall(r"(-?\d+)", data))
 
-    x_velocity_change = lambda x: -1 if x > 0 else 1 if x < 0 else 0
-    y_velocity_change = -1
+    target_area = TargetArea(x_min, x_max, y_min, y_max)
 
-    num_reached_target = 0
+    launcher = ProbeLauncher(target_area)
 
-    for inital_x_velocity in range(20, 231):
-        for inital_y_velocity in range(-99, 99):
-            x, y = 0, 0
-            initial_x, initial_y = x, y
-            x_velocity, y_velocity = inital_x_velocity, inital_y_velocity
-            while True:
-                x += x_velocity
-                y += y_velocity
-                # got to target area
-                if (
-                    x >= target_x1
-                    and x <= target_x2
-                    and y >= target_y1
-                    and y <= target_y2
-                ):
-                    num_reached_target += 1
-                    break
-                # check if passed target area
-                if (
-                    initial_x < min(target_x1, target_x2)
-                    and x > max(target_x1, target_x2)
-                    or initial_y < min(target_y1, target_y2)
-                    and y > max(target_y1, target_y2)
-                    or initial_x > max(target_x1, target_x2)
-                    and x < min(target_x1, target_x2)
-                    or initial_y > max(target_y1, target_y2)
-                    and y < min(target_y1, target_y2)
-                ):
-                    break
-                x_velocity += x_velocity_change(x_velocity)
-                y_velocity += y_velocity_change
-
-    print(f"Num reached target: {num_reached_target}")
+    print(f"Number of successful trajectories: {launcher.count_trajectories()}")
 
 
 if __name__ == "__main__":

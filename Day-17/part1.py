@@ -129,7 +129,7 @@ class TargetArea:
     y_min: int
     y_max: int
 
-    def is_within(self, point: Point) -> bool:
+    def contains(self, point: Point) -> bool:
         """
         Check if the given point is within the target area
 
@@ -145,7 +145,7 @@ class TargetArea:
 
     def missed_by(self, initial_pos: Point, point: Point) -> bool:
         """
-        Check if the given position is missed by the target area
+        Check if the target area is missed by the given point
 
         Args:
             initial_pos (Point): The position of the probe at the start
@@ -165,7 +165,7 @@ class ProbeLauncher:
     """Class for simulating the launching of probes toward a target area"""
 
     def __init__(self, target_area: TargetArea):
-        self.__target_area = target_area
+        self.target_area = target_area
 
     def __x_velocity_change(self, x_velocity: int) -> int:
         """Return -1 if x_velocity is greater than 0, 1 if x_velocity is less than 0, 0 otherwise"""
@@ -191,13 +191,13 @@ class ProbeLauncher:
         """
         position = Point(initial_pos.x, initial_pos.y)
         x_velocity, y_velocity = xv_i, yv_i
-        max_y = float("-inf")
+        max_y = position.y
         while True:
             position += Point(x_velocity, y_velocity)
             max_y = max(max_y, position.y)
-            if self.__target_area.is_within(position):
+            if self.target_area.contains(position):
                 return int(max_y)
-            if self.__target_area.missed_by(initial_pos, position):
+            if self.target_area.missed_by(initial_pos, position):
                 return None
             x_velocity += self.__x_velocity_change(x_velocity)
             y_velocity += self.__y_velocity_change(y_velocity)
@@ -216,11 +216,9 @@ class ProbeLauncher:
         max_y = float("-inf")
         best_initial_velocity = None
         # set range for brute force based on assumptions from data
-        start_x_velocity, end_x_velocity = initial_pos.x, self.__target_area.x_max
-        start_y_velocity = -max(
-            abs(self.__target_area.y_min), abs(self.__target_area.y_max)
-        )
-        end_y_velocity = -start_y_velocity
+        start_x_velocity, end_x_velocity = initial_pos.x, self.target_area.x_max
+        end_y_velocity = max(abs(self.target_area.y_min), abs(self.target_area.y_max))
+        start_y_velocity = -end_y_velocity
         # brute force finding the best initial velocity
         for xv_i in range(start_x_velocity, end_x_velocity + 1):
             for yv_i in range(start_y_velocity, end_y_velocity + 1):

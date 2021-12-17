@@ -125,10 +125,15 @@ In the above example, there are 112 different initial velocity values that meet 
 How many distinct initial velocity values cause the probe to be within the target area after any step?
 """
 
+import os
+import re
+
 
 def main():
-    target_x1, target_x2 = 201, 230
-    target_y1, target_y2 = -99, -65
+    with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
+        data = f.read()
+
+    target_x1, target_x2, target_y1, target_y2 = map(int, re.findall(r"(-?\d+)", data))
 
     x_velocity_change = lambda x: -1 if x > 0 else 1 if x < 0 else 0
     y_velocity_change = -1

@@ -103,9 +103,15 @@ In the above example, using an initial velocity of 6,9 is the best you can do, c
 Find the initial velocity that causes the probe to reach the highest y position and still eventually be within the target area after any step. What is the highest y position it reaches on this trajectory?
 """
 
+import os
+import re
+
+
 def main():
-    target_x1, target_x2 = 201, 230
-    target_y1, target_y2 = -99, -65
+    with open(os.path.join(os.path.dirname(__file__), "input.txt")) as f:
+        data = f.read()
+
+    target_x1, target_x2, target_y1, target_y2 = map(int, re.findall(r"(-?\d+)", data))
 
     best_y_velocity = (float("-inf"), (0, 0))
 
@@ -151,11 +157,9 @@ def main():
                     max_y_velocity,
                     (inital_x_velocity, inital_y_velocity),
                 )
-                print(
-                    f"New best: velocity={best_y_velocity[0]} at {best_y_velocity[1]}"
-                )
 
     print(best_y_velocity)
+
 
 if __name__ == "__main__":
     main()

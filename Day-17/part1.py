@@ -1,5 +1,5 @@
 """
--- Day 17: Trick Shot ---
+--- Day 17: Trick Shot ---
 You finally decode the Elves' message. HI, the message says. You continue searching for the sleigh keys.
 
 Ahead of you is what appears to be a large ocean trench. Could the keys have fallen into it? You'd better send a probe to investigate.

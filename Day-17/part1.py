@@ -103,8 +103,6 @@ In the above example, using an initial velocity of 6,9 is the best you can do, c
 Find the initial velocity that causes the probe to reach the highest y position and still eventually be within the target area after any step. What is the highest y position it reaches on this trajectory?
 """
 
-import matplotlib.pyplot as plt
-
 def main():
     target_x1, target_x2 = 201, 230
     target_y1, target_y2 = -99, -65
@@ -114,11 +112,8 @@ def main():
     x_velocity_change = lambda x: -1 if x > 0 else 1 if x < 0 else 0
     y_velocity_change = -1
 
-    reached_target_x = []
-    reached_target_y = []
-
-    for inital_x_velocity in range(-65, 100):
-        for inital_y_velocity in range(-65, 100):
+    for inital_x_velocity in range(20, 231):
+        for inital_y_velocity in range(-99, 99):
             reached_target = False
             x, y = 0, 0
             initial_x, initial_y = x, y
@@ -136,8 +131,6 @@ def main():
                     and y <= target_y2
                 ):
                     reached_target = True
-                    reached_target_x.append(inital_x_velocity)
-                    reached_target_y.append(inital_y_velocity)
                     break
                 # check if passed target area
                 if (
@@ -163,13 +156,6 @@ def main():
                 )
 
     print(best_y_velocity)
-
-    plt.scatter(reached_target_x, reached_target_y)
-    plt.title("Reached target area")
-    plt.xlabel("Initial x velocity")
-    plt.ylabel("Initial y velocity")
-    plt.show()
-
 
 if __name__ == "__main__":
     main()

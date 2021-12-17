@@ -135,8 +135,8 @@ def main():
 
     num_reached_target = 0
 
-    for inital_x_velocity in range(-100, 250):
-        for inital_y_velocity in range(-100, 250):
+    for inital_x_velocity in range(20, 231):
+        for inital_y_velocity in range(-99, 99):
             x, y = 0, 0
             initial_x, initial_y = x, y
             x_velocity, y_velocity = inital_x_velocity, inital_y_velocity

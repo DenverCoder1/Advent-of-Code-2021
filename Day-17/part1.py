@@ -215,8 +215,15 @@ class ProbeLauncher:
         """
         max_y = float("-inf")
         best_initial_velocity = None
-        for xv_i in range(20, 231):
-            for yv_i in range(-99, 99):
+        # set range for brute force based on assumptions from data
+        start_x_velocity, end_x_velocity = initial_pos.x, self.__target_area.x_max
+        start_y_velocity = -max(
+            abs(self.__target_area.y_min), abs(self.__target_area.y_max)
+        )
+        end_y_velocity = -start_y_velocity
+        # brute force finding the best initial velocity
+        for xv_i in range(start_x_velocity, end_x_velocity + 1):
+            for yv_i in range(start_y_velocity, end_y_velocity + 1):
                 y_pos = self.launch(initial_pos, xv_i, yv_i)
                 if y_pos and y_pos > max_y:
                     max_y = y_pos
